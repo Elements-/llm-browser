@@ -100,7 +100,7 @@ function redactOldDomContents(messages) {
 
 // Function to initialize the system prompt with the initial DOM
 export function initializeSystemPrompt(processedDom) {
-  const systemPrompt = `You are an AI assistant interacting with web pages. You can instruct the user to click elements, enter text into inputs, or navigate to URLs.
+  const systemPrompt = `You are an AI assistant interacting with web pages. You can click elements, enter text into inputs, or navigate to URL with the included functions.
 
 You should never ask the user to click a button or do something that you can do yourself. Always go as far as you can with the instructions you are given.
 

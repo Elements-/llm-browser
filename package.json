@@ -8,7 +8,6 @@
     },
     "dependencies": {
         "base64-js": "^1.5.1",
-        "canvas": "^2.11.2",
         "chrome-launcher": "^0.15.2",
         "chrome-remote-interface": "^0.32.2",
         "dotenv": "^16.4.5",

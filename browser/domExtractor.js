@@ -32,24 +32,35 @@ export async function processNode(nodeId, client) {
 
     if (node.nodeType === 1) {
       // Element node
-      // Execute function in page context to check if the element is in viewport
+      // Execute function in page context to check if the element is visible or can be scrolled to
       const { result: visibilityResult } = await Runtime.callFunctionOn({
         objectId: objectId,
         functionDeclaration: `
             function() {
                 const rect = this.getBoundingClientRect();
-                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-                const isInViewport = 
-                    rect.width > 0 &&
-                    rect.height > 0 &&
-                    ((rect.top >= 0 && rect.top < viewportHeight) ||
-                     (rect.bottom > 0 && rect.bottom <= viewportHeight) ||
-                     (rect.top < 0 && rect.bottom > viewportHeight)) &&
-                    ((rect.left >= 0 && rect.left < viewportWidth) ||
-                     (rect.right > 0 && rect.right <= viewportWidth) ||
-                     (rect.left < 0 && rect.right > viewportWidth));
-                return isInViewport;
+                const documentHeight = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.offsetHeight,
+                    document.body.clientHeight,
+                    document.documentElement.clientHeight
+                );
+                const documentWidth = Math.max(
+                    document.body.scrollWidth,
+                    document.documentElement.scrollWidth,
+                    document.body.offsetWidth,
+                    document.documentElement.offsetWidth,
+                    document.body.clientWidth,
+                    document.documentElement.clientWidth
+                );
+
+                return rect.width > 0 &&
+                       rect.height > 0 &&
+                       rect.bottom > 0 &&
+                       rect.right > 0 &&
+                       rect.top < documentHeight &&
+                       rect.left < documentWidth;
             }
         `,
         returnByValue: true,

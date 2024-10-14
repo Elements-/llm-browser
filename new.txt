@@ -1,0 +1,987 @@
+html(4869)
+  body(4871)
+    div(4877)
+      h2(4893) "Dedicated Servers"
+        i(4894)
+      ul(4898)
+        li(4899)
+          i(4905)
+          span(4907) "1Gbps Dedicated Port"
+        li(4900)
+          i(4909)
+          span(4911) "In-house DDoS protection"
+        li(4901)
+          i(4913)
+          span(4915) "15-minute Setup"
+        li(4902)
+          i(4917)
+          span(4919) "State-of-the-art Datacenters"
+        li(4903)
+          i(4921)
+          span(4923) "Redundant network & power"
+        li(4904)
+          i(4925)
+          span(4927) "Cooling for reliable performance"
+    div(4929)
+      h3(4935) "Now Offering
+                     and Custom Servers"
+        mark(4937) "Instant Setup"
+      div(4943)
+        span(4946) "Filter Locations"
+        div(4950) [interactable: true]
+          input(4951) [interactable: true, value="buffalo-new-york"]
+          label(4953) [interactable: true]
+            span(4954) [interactable: true] "Buffalo"
+            span(4956) [interactable: true] "(New York)"
+        div(4958) [interactable: true]
+          input(4959) [interactable: true, value="chicago-illinois"]
+          label(4961) [interactable: true]
+            span(4962) [interactable: true] "Chicago"
+            span(4964) [interactable: true] "(Illinois)"
+      div(4967)
+        div(4968)
+          div(4970) "Instant Servers"
+          div(4972)
+            svg(4976)
+              path(4977)
+            span(4974) "Setup in 15
+                                minutes"
+        table(4969)
+          thead(4978)
+            tr(4980)
+              th(4981) [interactable: true]
+                div(4987) [interactable: true]
+                  i(4988) [interactable: true]
+                  span(4990) [interactable: true] "CPU"
+              th(4982) [interactable: true]
+                div(4994) [interactable: true]
+                  i(4995) [interactable: true]
+                  span(4997) [interactable: true] "Storage"
+              th(4983) [interactable: true]
+                div(5001) [interactable: true]
+                  i(5002) [interactable: true]
+                  span(5004) [interactable: true] "Memory"
+              th(4984) [interactable: true]
+                div(5008) [interactable: true]
+                  i(5009) [interactable: true]
+                  span(5011) [interactable: true] "Setup"
+              th(4985) [interactable: true]
+                div(5015) [interactable: true]
+                  i(5016) [interactable: true]
+                  span(5018) [interactable: true] "Price/mo"
+              th(4986) [interactable: true]
+          tbody(4979)
+            tr(5023)
+              td(5102)
+                div(5104)
+                  div(5111) "2x Intel Xeon L5420"
+                    svg(5114)
+                      path(5116)
+                      path(5117)
+                  div(5112)
+                    i(5118)
+                    p(5120) "Cores:"
+                      strong(5122) "8 @ 2.4Ghz"
+                  div(5113)
+                    i(5124)
+                    p(5126) "CPU Score:"
+                      strong(5128) "3933"
+              td(5105)
+                div(5130)
+                  i(5131)
+                  span(5133) "1TB SSD"
+              td(5106)
+                div(5135)
+                  i(5136)
+                  span(5138) "16GB DDR3"
+              td(5107)
+                div(5140)
+                  svg(5144)
+                    path(5145)
+                  span(5142) "15 min"
+              td(5108) "$35.00"
+              td(5110)
+                div(5146)
+                  button(5149) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                    span(5150) [interactable: true] "Deploy"
+                    svg(5153) [interactable: true]
+                      path(5154) [interactable: true]
+                  a(5156) [href="https://beta.cloud.datawagon.com/order/344", interactable: true] "Buffalo, New York"
+            tr(5024)
+              td(5159)
+                div(5165)
+                  i(5166)
+                  span(5168) "500GB SSD + 2TB HDD"
+              td(5160)
+                div(5170)
+                  i(5171)
+                  span(5173) "16GB DDR3"
+              td(5161)
+                div(5175)
+                  svg(5179)
+                    path(5180)
+                  span(5177) "15 min"
+              td(5162) "$42.00"
+              td(5164)
+                button(5184) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5185) [interactable: true] "Deploy"
+                  svg(5188) [interactable: true]
+                    path(5189) [interactable: true]
+            tr(5025)
+              td(5191)
+                div(5197)
+                  i(5198)
+                  span(5200) "120GB SSD + 4TB HDD"
+              td(5192)
+                div(5202)
+                  i(5203)
+                  span(5205) "8GB DDR3"
+              td(5193)
+                div(5207)
+                  svg(5211)
+                    path(5212)
+                  span(5209) "15 min"
+              td(5194) "$45.00"
+              td(5196)
+                button(5216) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5217) [interactable: true] "Deploy"
+                  svg(5220) [interactable: true]
+                    path(5221) [interactable: true]
+            tr(5027)
+              td(5222)
+              td(5223)
+              td(5224)
+              td(5225)
+              td(5226)
+              td(5227)
+            tr(5030)
+              td(5228)
+                div(5230)
+                  div(5237) "Intel Xeon E3-1240"
+                    svg(5240)
+                      path(5242)
+                      path(5243)
+                  div(5238)
+                    i(5244)
+                    p(5246) "Cores:"
+                      strong(5248) "8 @ 3.3Ghz"
+                  div(5239)
+                    i(5250)
+                    p(5252) "CPU Score:"
+                      strong(5254) "5263"
+              td(5231)
+                div(5256)
+                  i(5257)
+                  span(5259) "1TB HDD + 2TB HDD"
+              td(5232)
+                div(5261)
+                  i(5262)
+                  span(5264) "16GB DDR3"
+              td(5233)
+                div(5266)
+                  svg(5270)
+                    path(5271)
+                  span(5268) "15 min"
+              td(5234) "$36.00"
+              td(5236)
+                button(5275) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5276) [interactable: true] "Deploy"
+                  svg(5279) [interactable: true]
+                    path(5280) [interactable: true]
+            tr(5032)
+              td(5281)
+              td(5282)
+              td(5283)
+              td(5284)
+              td(5285)
+              td(5286)
+            tr(5035)
+              td(5287)
+                div(5289)
+                  div(5296) "Intel Xeon E3-1270 V3"
+                    svg(5299)
+                      path(5301)
+                      path(5302)
+                  div(5297)
+                    i(5303)
+                    p(5305) "Cores:"
+                      strong(5307) "8 @ 3.5Ghz"
+                  div(5298)
+                    i(5309)
+                    p(5311) "CPU Score:"
+                      strong(5313) "7222"
+              td(5290)
+                div(5315)
+                  i(5316)
+                  span(5318) "500G SSD"
+              td(5291)
+                div(5320)
+                  i(5321)
+                  span(5323) "32GB DDR3"
+              td(5292)
+                div(5325)
+                  svg(5329)
+                    path(5330)
+                  span(5327) "15 min"
+              td(5293) "$39.99"
+              td(5295)
+                button(5334) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5335) [interactable: true] "Deploy"
+                  svg(5338) [interactable: true]
+                    path(5339) [interactable: true]
+            tr(5036)
+              td(5341)
+                div(5347)
+                  i(5348)
+                  span(5350) "2x 500G SSD"
+              td(5342)
+                div(5352)
+                  i(5353)
+                  span(5355) "32GB DDR3"
+              td(5343)
+                div(5357)
+                  svg(5361)
+                    path(5362)
+                  span(5359) "15 min"
+              td(5344) "$49.99"
+              td(5346)
+                button(5366) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5367) [interactable: true] "Deploy"
+                  svg(5370) [interactable: true]
+                    path(5371) [interactable: true]
+            tr(5037)
+              td(5373)
+                div(5379)
+                  i(5380)
+                  span(5382) "1TB SSD"
+              td(5374)
+                div(5384)
+                  i(5385)
+                  span(5387) "32GB DDR3"
+              td(5375)
+                div(5389)
+                  svg(5393)
+                    path(5394)
+                  span(5391) "15 min"
+              td(5376) "$49.99"
+              td(5378)
+                button(5398) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5399) [interactable: true] "Deploy"
+                  svg(5402) [interactable: true]
+                    path(5403) [interactable: true]
+            tr(5039)
+              td(5404)
+              td(5405)
+              td(5406)
+              td(5407)
+              td(5408)
+              td(5409)
+            tr(5042)
+              td(5410)
+                div(5412)
+                  div(5419) "Intel Xeon E3-1240 V3"
+                    svg(5422)
+                      path(5424)
+                      path(5425)
+                  div(5420)
+                    i(5426)
+                    p(5428) "Cores:"
+                      strong(5430) "8 @ 3.4Ghz"
+                  div(5421)
+                    i(5432)
+                    p(5434) "CPU Score:"
+                      strong(5436) "6972"
+              td(5413)
+                div(5438)
+                  i(5439)
+                  span(5441) "2x 120GB SSD"
+              td(5414)
+                div(5443)
+                  i(5444)
+                  span(5446) "32GB DDR3"
+              td(5415)
+                div(5448)
+                  svg(5452)
+                    path(5453)
+                  span(5450) "15 min"
+              td(5416) "$39.00"
+              td(5418)
+                button(5457) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5458) [interactable: true] "Deploy"
+                  svg(5461) [interactable: true]
+                    path(5462) [interactable: true]
+            tr(5043)
+              td(5464)
+                div(5470)
+                  i(5471)
+                  span(5473) "500G SSD"
+              td(5465)
+                div(5475)
+                  i(5476)
+                  span(5478) "32GB DDR3"
+              td(5466)
+                div(5480)
+                  svg(5484)
+                    path(5485)
+                  span(5482) "15 min"
+              td(5467) "$40.00"
+              td(5469)
+                button(5489) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5490) [interactable: true] "Deploy"
+                  svg(5493) [interactable: true]
+                    path(5494) [interactable: true]
+            tr(5045)
+              td(5495)
+              td(5496)
+              td(5497)
+              td(5498)
+              td(5499)
+              td(5500)
+            tr(5048)
+              td(5501)
+                div(5503)
+                  div(5510) "2x Intel Xeon L5520"
+                    svg(5513)
+                      path(5515)
+                      path(5516)
+                  div(5511)
+                    i(5517)
+                    p(5519) "Cores:"
+                      strong(5521) "16 @ 2.48Ghz"
+                  div(5512)
+                    i(5523)
+                    p(5525) "CPU Score:"
+                      strong(5527) "3119"
+              td(5504)
+                div(5529)
+                  i(5530)
+                  span(5532) "120GB SSD"
+              td(5505)
+                div(5534)
+                  i(5535)
+                  span(5537) "72GB DDR3"
+              td(5506)
+                div(5539)
+                  svg(5543)
+                    path(5544)
+                  span(5541) "15 min"
+              td(5507) "$44.00"
+              td(5509)
+                button(5548) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5549) [interactable: true] "Deploy"
+                  svg(5552) [interactable: true]
+                    path(5553) [interactable: true]
+            tr(5049)
+              td(5555)
+                div(5561)
+                  i(5562)
+                  span(5564) "500GB SSD"
+              td(5556)
+                div(5566)
+                  i(5567)
+                  span(5569) "72GB DDR3"
+              td(5557)
+                div(5571)
+                  svg(5575)
+                    path(5576)
+                  span(5573) "15 min"
+              td(5558) "$49.99"
+              td(5560)
+                button(5580) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5581) [interactable: true] "Deploy"
+                  svg(5584) [interactable: true]
+                    path(5585) [interactable: true]
+            tr(5050)
+              td(5587)
+                div(5593)
+                  i(5594)
+                  span(5596) "120GB SSD + 1TB HDD"
+              td(5588)
+                div(5598)
+                  i(5599)
+                  span(5601) "96GB DDR3"
+              td(5589)
+                div(5603)
+                  svg(5607)
+                    path(5608)
+                  span(5605) "15 min"
+              td(5590) "$55.00"
+              td(5592)
+                button(5612) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5613) [interactable: true] "Deploy"
+                  svg(5616) [interactable: true]
+                    path(5617) [interactable: true]
+            tr(5051)
+              td(5619)
+                div(5625)
+                  i(5626)
+                  span(5628) "1TB SSD"
+              td(5620)
+                div(5630)
+                  i(5631)
+                  span(5633) "96GB DDR3"
+              td(5621)
+                div(5635)
+                  svg(5639)
+                    path(5640)
+                  span(5637) "15 min"
+              td(5622) "$59.00"
+              td(5624)
+                button(5644) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5645) [interactable: true] "Deploy"
+                  svg(5648) [interactable: true]
+                    path(5649) [interactable: true]
+            tr(5053)
+              td(5650)
+              td(5651)
+              td(5652)
+              td(5653)
+              td(5654)
+              td(5655)
+            tr(5056)
+              td(5656)
+                div(5658)
+                  div(5665) "2x Intel Xeon X5650"
+                    svg(5668)
+                      path(5670)
+                      path(5671)
+                  div(5666)
+                    i(5672)
+                    p(5674) "Cores:"
+                      strong(5676) "24 @ 3.08Ghz"
+                  div(5667)
+                    i(5678)
+                    p(5680) "CPU Score:"
+                      strong(5682) "10517"
+              td(5659)
+                div(5684)
+                  i(5685)
+                  span(5687) "500GB SSD"
+              td(5660)
+                div(5689)
+                  i(5690)
+                  span(5692) "64GB DDR3"
+              td(5661)
+                div(5694)
+                  svg(5698)
+                    path(5699)
+                  span(5696) "15 min"
+              td(5662) "$49.99"
+              td(5664)
+                button(5703) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5704) [interactable: true] "Deploy"
+                  svg(5707) [interactable: true]
+                    path(5708) [interactable: true]
+            tr(5058)
+              td(5709)
+              td(5710)
+              td(5711)
+              td(5712)
+              td(5713)
+              td(5714)
+            tr(5061)
+              td(5715)
+                div(5717)
+                  div(5724) "Dual Intel Xeon E5-2670"
+                    svg(5727)
+                      path(5729)
+                      path(5730)
+                  div(5725)
+                    i(5731)
+                    p(5733) "Cores:"
+                      strong(5735) "32 @ 3.3Ghz"
+                  div(5726)
+                    i(5737)
+                    p(5739) "CPU Score:"
+                      strong(5741) "15755"
+              td(5718)
+                div(5743)
+                  i(5744)
+                  span(5746) "2x 500GB SSD"
+              td(5719)
+                div(5748)
+                  i(5749)
+                  span(5751) "32GB DDR3"
+              td(5720)
+                div(5753)
+                  svg(5757)
+                    path(5758)
+                  span(5755) "15 min"
+              td(5721) "$55.00"
+              td(5723)
+                button(5762) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5763) [interactable: true] "Deploy"
+                  svg(5766) [interactable: true]
+                    path(5767) [interactable: true]
+            tr(5062)
+              td(5769)
+                div(5775)
+                  i(5776)
+                  span(5778) "1TB SSD"
+              td(5770)
+                div(5780)
+                  i(5781)
+                  span(5783) "64GB DDR3"
+              td(5771)
+                div(5785)
+                  svg(5789)
+                    path(5790)
+                  span(5787) "15 min"
+              td(5772) "$70.00"
+              td(5774)
+                button(5794) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5795) [interactable: true] "Deploy"
+                  svg(5798) [interactable: true]
+                    path(5799) [interactable: true]
+            tr(5064)
+              td(5800)
+              td(5801)
+              td(5802)
+              td(5803)
+              td(5804)
+              td(5805)
+            tr(5067)
+              td(5806)
+                div(5808)
+                  div(5815) "Dual Intel Xeon E5-2660 V2"
+                    svg(5818)
+                      path(5820)
+                      path(5821)
+                  div(5816)
+                    i(5822)
+                    p(5824) "Cores:"
+                      strong(5826) "40 @ 2.6Ghz"
+                  div(5817)
+                    i(5828)
+                    p(5830) "CPU Score:"
+                      strong(5832) "18953"
+              td(5809)
+                div(5834)
+                  i(5835)
+                  span(5837) "2TB SSD"
+              td(5810)
+                div(5839)
+                  i(5840)
+                  span(5842) "128GB DDR3"
+              td(5811)
+                div(5844)
+                  svg(5848)
+                    path(5849)
+                  span(5846) "15 min"
+              td(5812) "$89.00"
+              td(5814)
+                button(5853) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5854) [interactable: true] "Deploy"
+                  svg(5857) [interactable: true]
+                    path(5858) [interactable: true]
+            tr(5069)
+              td(5859)
+              td(5860)
+              td(5861)
+              td(5862)
+              td(5863)
+              td(5864)
+            tr(5072)
+              td(5865)
+                div(5867)
+                  div(5874) "Dual Intel Xeon E5-2630L V2"
+                    svg(5877)
+                      path(5879)
+                      path(5880)
+                  div(5875)
+                    i(5881)
+                    p(5883) "Cores:"
+                      strong(5885) "24 @ 2.8Ghz"
+                  div(5876)
+                    i(5887)
+                    p(5889) "CPU Score:"
+                      strong(5891) "11301"
+              td(5868)
+                div(5893)
+                  i(5894)
+                  span(5896) "4x 500GB SSD"
+              td(5869)
+                div(5898)
+                  i(5899)
+                  span(5901) "128GB DDR3"
+              td(5870)
+                div(5903)
+                  svg(5907)
+                    path(5908)
+                  span(5905) "15 min"
+              td(5871) "$99.00"
+              td(5873)
+                button(5912) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5913) [interactable: true] "Deploy"
+                  svg(5916) [interactable: true]
+                    path(5917) [interactable: true]
+            tr(5074)
+              td(5918)
+              td(5919)
+              td(5920)
+              td(5921)
+              td(5922)
+              td(5923)
+            tr(5077)
+              td(5924)
+                div(5926)
+                  div(5933) "AMD Ryzen 3950X"
+                    svg(5936)
+                      path(5938)
+                  div(5934)
+                    i(5939)
+                    p(5941) "Cores:"
+                      strong(5943) "32 @ 4.2Ghz"
+                  div(5935)
+                    i(5945)
+                    p(5947) "CPU Score:"
+                      strong(5949) "39195"
+              td(5927)
+                div(5951)
+                  i(5952)
+                  span(5954) "500GB NVMe SSD + 2x 8TB SSD"
+              td(5928)
+                div(5956)
+                  i(5957)
+                  span(5959) "64GB DDR4"
+              td(5929)
+                div(5961)
+                  svg(5965)
+                    path(5966)
+                  span(5963) "15 min"
+              td(5930) "$125.00"
+              td(5932)
+                button(5970) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(5971) [interactable: true] "Deploy"
+                  svg(5974) [interactable: true]
+                    path(5975) [interactable: true]
+            tr(5079)
+              td(5976)
+              td(5977)
+              td(5978)
+              td(5979)
+              td(5980)
+              td(5981)
+            tr(5082)
+              td(5982)
+                div(5984)
+                  div(5991) "AMD Ryzen 5900X"
+                    svg(5994)
+                      path(5996)
+                  div(5992)
+                    i(5997)
+                    p(5999) "Cores:"
+                      strong(6001) "24 @ 4.5Ghz"
+                  div(5993)
+                    i(6003)
+                    p(6005) "CPU Score:"
+                      strong(6007) "39526"
+              td(5985)
+                div(6009)
+                  i(6010)
+                  span(6012) "2x 2TB NVMe SSD"
+              td(5986)
+                div(6014)
+                  i(6015)
+                  span(6017) "128GB DDR4"
+              td(5987)
+                div(6019)
+                  svg(6023)
+                    path(6024)
+                  span(6021) "15 min"
+              td(5988) "$165.00"
+              td(5990)
+                button(6028) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(6029) [interactable: true] "Deploy"
+                  svg(6032) [interactable: true]
+                    path(6033) [interactable: true]
+            tr(5084)
+              td(6034)
+              td(6035)
+              td(6036)
+              td(6037)
+              td(6038)
+              td(6039)
+            tr(5087)
+              td(6040)
+                div(6042)
+                  div(6049) "AMD Ryzen 9700X"
+                    svg(6052)
+                      path(6054)
+                  div(6050)
+                    i(6055)
+                    p(6057) "Cores:"
+                      strong(6059) "16 @ 5.5Ghz"
+                  div(6051)
+                    i(6061)
+                    p(6063) "CPU Score:"
+                      strong(6065) "37541"
+              td(6043)
+                div(6067)
+                  i(6068)
+                  span(6070) "2x 1TB NVMe SSD"
+              td(6044)
+                div(6072)
+                  i(6073)
+                  span(6075) "64GB DDR5"
+              td(6045)
+                div(6077)
+                  svg(6081)
+                    path(6082)
+                  span(6079) "15 min"
+              td(6046) "$175.00"
+              td(6048)
+                button(6086) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(6087) [interactable: true] "Deploy"
+                  svg(6090) [interactable: true]
+                    path(6091) [interactable: true]
+            tr(5088)
+              td(6093)
+                div(6099)
+                  i(6100)
+                  span(6102) "2x 2TB NVMe SSD"
+              td(6094)
+                div(6104)
+                  i(6105)
+                  span(6107) "128GB DDR5"
+              td(6095)
+                div(6109)
+                  svg(6113)
+                    path(6114)
+                  span(6111) "15 min"
+              td(6096) "$215.00"
+              td(6098)
+                button(6118) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(6119) [interactable: true] "Deploy"
+                  svg(6122) [interactable: true]
+                    path(6123) [interactable: true]
+            tr(5089)
+              td(6125)
+                div(6131)
+                  i(6132)
+                  span(6134) "2x 2TB NVMe SSD"
+              td(6126)
+                div(6136)
+                  i(6137)
+                  span(6139) "128GB DDR5"
+              td(6127)
+                div(6141)
+                  svg(6145)
+                    path(6146)
+                  span(6143) "15 min"
+              td(6128) "$235.00"
+              td(6130)
+                button(6150) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(6151) [interactable: true] "Deploy"
+                  svg(6154) [interactable: true]
+                    path(6155) [interactable: true]
+            tr(5091)
+              td(6156)
+              td(6157)
+              td(6158)
+              td(6159)
+              td(6160)
+              td(6161)
+            tr(5094)
+              td(6162)
+                div(6164)
+                  div(6171) "AMD Ryzen 7950X"
+                    svg(6174)
+                      path(6176)
+                  div(6172)
+                    i(6177)
+                    p(6179) "Cores:"
+                      strong(6181) "32 @ 5.6Ghz"
+                  div(6173)
+                    i(6183)
+                    p(6185) "CPU Score:"
+                      strong(6187) "63610"
+              td(6165)
+                div(6189)
+                  i(6190)
+                  span(6192) "2TB NVMe SSD"
+              td(6166)
+                div(6194)
+                  i(6195)
+                  span(6197) "128GB DDR5"
+              td(6167)
+                div(6199)
+                  svg(6203)
+                    path(6204)
+                  span(6201) "15 min"
+              td(6168) "$189.00"
+              td(6170)
+                button(6208) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(6209) [interactable: true] "Deploy"
+                  svg(6212) [interactable: true]
+                    path(6213) [interactable: true]
+            tr(5096)
+              td(6214)
+              td(6215)
+              td(6216)
+              td(6217)
+              td(6218)
+              td(6219)
+            tr(5099)
+              td(6220)
+                div(6222)
+                  div(6229) "AMD EPYC 7B13"
+                    svg(6232)
+                      path(6234)
+                  div(6230)
+                    i(6235)
+                    p(6237) "Cores:"
+                      strong(6239) "128 @ 3.5Ghz"
+                  div(6231)
+                    i(6241)
+                    p(6243) "CPU Score:"
+                      strong(6245) "77460"
+              td(6223)
+                div(6247)
+                  i(6248)
+                  span(6250) "2x 4TB NVMe SSD"
+              td(6224)
+                div(6252)
+                  i(6253)
+                  span(6255) "512GB DDR4"
+              td(6225)
+                div(6257)
+                  svg(6261)
+                    path(6262)
+                  span(6259) "15 min"
+              td(6226) "$375.00"
+              td(6228)
+                button(6266) [interactable: true, aria-haspopup="true", aria-controls="dropdown-menu"]
+                  span(6267) [interactable: true] "Deploy"
+                  svg(6270) [interactable: true]
+                    path(6271) [interactable: true]
+      p(6273) "Don't see what you're looking for?"
+        a(6275) [href="billing/submitticket.php?step=2&deptid=2", interactable: true] "Contact us for custom
+                            configurations!"
+    div(6277)
+      div(6280)
+        h3(6281) "All The Features You Want"
+        h5(6283) "and none that you don't."
+      div(6279)
+        div(6285)
+          svg(6295)
+            g(6296)
+              g(6297)
+                g(6298)
+                  path(6299)
+          div(6300)
+            h4(6301) "Dedicated 1Gbps or 10Gbps ports"
+            p(6303) "Never worry about network congestion. Every server comes standard with an unshared 1Gbps port, with the option to upgrade to 10Gbps."
+        div(6286)
+          svg(6309)
+            g(6310)
+              g(6311)
+                g(6312)
+                  path(6313)
+          div(6314)
+            h4(6315) "Automatic Setup"
+            p(6317) "All instant setup dedicated servers are automatically provisioned and delivered within 15 minutes."
+        div(6287)
+          svg(6323)
+            g(6324)
+              g(6325)
+                g(6326)
+                  path(6327)
+                  rect(6328)
+                  circle(6329)
+                  circle(6330)
+                  rect(6331)
+          div(6332)
+            h4(6333) "BGP Available"
+            p(6335) "BGP sessions available free of charge with all dedicated servers!"
+        div(6288)
+          svg(6341)
+            g(6342)
+              g(6343)
+                g(6344)
+                  path(6345)
+          div(6346)
+            h4(6347) "IPMI Access"
+            p(6349) "Instantly reinstall, monitor bandwidth, reboot, and do tons more with our powerful control panel."
+        div(6289)
+          svg(6355)
+            path(6356)
+          div(6357)
+            h4(6358) "IPv6 Available"
+            p(6360) "/64 IPv6 block included with all dedicated servers on request."
+        div(6290)
+          svg(6366)
+            path(6367)
+          div(6368)
+            h4(6369) "DDoS Protection"
+            p(6371) "DataWagon has the capability to thwart all kinds of DDoS attacks up to 80Gbps with our in-house mitigation system."
+    div(6373)
+      h3(6377) "Frequently Asked Questions"
+      ul(6381)
+        li(6382)
+          label(6388) [interactable: true]
+            svg(6393) [interactable: true]
+              path(6394) [interactable: true]
+            span(6391) [interactable: true] "What is a Dedicated Server?"
+          p(6395) "A dedicated server is a machine that is 100% dedicated to you. Unlike a VPS, 100% of the storage, RAM, processing power, and uplink is dedicated to you and you only."
+        li(6383)
+          label(6398) [interactable: true]
+            svg(6403) [interactable: true]
+              path(6404) [interactable: true]
+            span(6401) [interactable: true] "Can I upgrade my Dedicated Server?"
+        li(6384)
+          label(6406) [interactable: true]
+            svg(6411) [interactable: true]
+              path(6412) [interactable: true]
+            span(6409) [interactable: true] "What operating systems are available?"
+        li(6385)
+          label(6414) [interactable: true]
+            svg(6419) [interactable: true]
+              path(6420) [interactable: true]
+            span(6417) [interactable: true] "What kind of management panel is provided?"
+        li(6386)
+          label(6422) [interactable: true]
+            svg(6427) [interactable: true]
+              path(6428) [interactable: true]
+            span(6425) [interactable: true] "Is IPMI access provided?"
+    p(6432) "What're you waiting for?"
+      a(6434) [href="https://beta.cloud.datawagon.com/order/", interactable: true] "Get Started"
+    div(6436)
+      div(6437)
+        div(6441)
+          img(6444)
+          p(6445) "Start your hosting adventure with DataWagon."
+          ul(6447)
+            li(6448)
+              a(6452) [href="tel:+19144951661", interactable: true]
+                i(6453) [interactable: true]
+            li(6449)
+              a(6455) [href="https://goo.gl/maps/ZP5PBMBWAb42", interactable: true]
+                i(6456) [interactable: true]
+            li(6450)
+              a(6458) [href="https://twitter.com/datawagon", interactable: true]
+                i(6459) [interactable: true]
+            li(6451)
+              a(6461) [href="https://www.linkedin.com/company/datawagon-llc", interactable: true]
+                i(6462) [interactable: true]
+        div(6442)
+          h6(6464) "Company"
+          ul(6466)
+            li(6467)
+              a(6471) [href="/company", interactable: true] "About DataWagon"
+            li(6468)
+              a(6473) [href="/tos", interactable: true] "Terms Of Service"
+            li(6469)
+              a(6475) [href="/aup", interactable: true] "AUP"
+            li(6470)
+              a(6477) [href="billing/submitticket.php", interactable: true] "Contact Us"
+        div(6443)
+          h6(6479) "Services"
+          ul(6481)
+            li(6482)
+              a(6485) [href="/ddos-protected-dedicated-servers", interactable: true] "Dedicated Servers"
+            li(6483)
+              a(6487) [href="/ddos-protected-vps", interactable: true] "VPS"
+            li(6484)
+              a(6489) [href="/ddos-protection", interactable: true] "DDoS Protection"
+      p(6438) "Copyright © 2024 DataWagon, LLC. All Rights Reserved."

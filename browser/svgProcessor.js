@@ -2,6 +2,9 @@ import Groq from "groq-sdk";
 import sharp from "sharp";
 import crypto from "crypto";
 
+// Read the PROCESS_SVG boolean from the environment variables
+const processSvg = process.env.PROCESS_SVG === 'true';
+
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // In-memory cache
@@ -42,6 +45,10 @@ function generateHash(svgMarkup) {
 
 // Function to process SVG markup and get a description
 export async function processSVG(svgMarkup) {
+  if (!processSvg) {
+    return "";
+  }
+
   try {
     const hash = generateHash(svgMarkup);
 

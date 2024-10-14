@@ -3,13 +3,14 @@ import { assistantFunctions } from './functions.js';
 import { executeCommand } from '../browser/browser.js';
 import { getDOMRepresentation } from '../browser/domExtractor.js';
 import { processDom } from '../browser/domProcessor.js';
+import { computeDifferencePercentage, findTextDifferences } from '../browser/domComparator.js';
 
 // Function to process assistant's response
-export async function processAssistantResponse(messages, client, processedDom) {
-  // Before sending the request, redact old DOM contents to save context length
+export async function processAssistantResponse(messages, client, processedDom, domRepresentation) {
+  // Redact old DOM contents to save context length
   redactOldDomContents(messages);
 
-  console.log(messages)
+  console.log(messages);
 
   const response = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
@@ -33,7 +34,7 @@ export async function processAssistantResponse(messages, client, processedDom) {
       argsObj = JSON.parse(args);
     } catch (err) {
       console.error('Error parsing function arguments:', err);
-      return processedDom;
+      return { processedDom, domRepresentation };
     }
 
     // Execute the function
@@ -41,24 +42,68 @@ export async function processAssistantResponse(messages, client, processedDom) {
 
     // After executing the function, re-extract and process the DOM
     const newDomRepresentation = await getDOMRepresentation(client);
+
+    // Process the new DOM representation into text
     const newProcessedDom = processDom(newDomRepresentation);
 
-    // Include the updated DOM in the function response
-    messages.push({
-      role: 'function',
-      name: name,
-      content: `Command executed and DOM updated.
+    // Ensure they are strings
+    if (typeof processedDom !== 'string') {
+      processedDom = JSON.stringify(processedDom);
+    }
+
+    if (typeof newProcessedDom !== 'string') {
+      newProcessedDom = JSON.stringify(newProcessedDom);
+    }
+
+    // Now compute the difference percentage
+    const differencePercentage = computeDifferencePercentage(processedDom, newProcessedDom);
+    console.log(`Difference Percentage: ${differencePercentage}%`);
+
+    if (differencePercentage < 25) {
+      // Find differences and annotate the new DOM representation
+      findTextDifferences(domRepresentation, newDomRepresentation);
+
+      // Re-process the new DOM representation after annotation
+      const annotatedProcessedDom = processDom(newDomRepresentation);
+
+      // Include the updated DOM in the function response with adjusted prompt
+      messages.push({
+        role: 'function',
+        name: name,
+        content: `Command executed and DOM updated with small changes.
+The *NEW NODE* tags indicate some of the small changes on the page, this may indicate something like a dropdown selection, popup, or alert.
+***Your next action is likely related to these new nodes.***
+The current DOM content is:
+${annotatedProcessedDom}
+`,
+      });
+    } else {
+      // Include the updated DOM in the function response without annotation
+      messages.push({
+        role: 'function',
+        name: name,
+        content: `Command executed and DOM updated.
 The current DOM content is:
 ${newProcessedDom}
 `,
-    });
+      });
+    }
+
+    // Update processedDom and domRepresentation for the next iteration
+    processedDom = newProcessedDom;
+    domRepresentation = newDomRepresentation;
 
     // Recursive call to process assistant's response
-    return await processAssistantResponse(messages, client, newProcessedDom); // Return the updated processedDom
+    return await processAssistantResponse(
+      messages,
+      client,
+      processedDom,
+      domRepresentation
+    );
   } else {
     // Assistant provided a response
     console.log('Assistant:', aiMessage.content);
-    return processedDom; // Return the current processedDom
+    return { processedDom, domRepresentation };
   }
 }
 
@@ -91,7 +136,7 @@ function redactOldDomContents(messages) {
         // Redact DOM content from this message
         const splitContent = msg.content.split('The current DOM content is:');
         if (splitContent.length > 1) {
-          msg.content = `${splitContent[0]}The current DOM content is: [DOM content redacted]`;
+          msg.content = `Command executed and DOM updated: [DOM content redacted]`;
         }
       }
     }
@@ -102,10 +147,7 @@ function redactOldDomContents(messages) {
 export function initializeSystemPrompt(processedDom) {
   const systemPrompt = `You are an AI assistant interacting with web pages. You can click elements, enter text into inputs, or navigate to URL with the included functions.
 
-You should never ask the user to click a button or do something that you can do yourself. Always go as far as you can with the instructions you are given.
-
-The current DOM content is:
-${processedDom}
+You should never repeat the same action, be aware some elements on the page such as dropdowns or popups may require followup actions.
 `;
   // Return the system message
   return { role: 'system', content: systemPrompt };

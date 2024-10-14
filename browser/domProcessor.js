@@ -62,8 +62,14 @@ export function flattenDom(node) {
   export function generateText(node, indent = 0) {
     if (!node || !node.tagName) return ''; // Skip nodes without tagName
   
-    const indentStr = '  '.repeat(indent);
-    let line = indentStr + node.tagName + '(' + node.nodeId + ')';
+    let line = '';
+    if (node.isNew) {
+      line += '*NEW NODE* ';
+    }
+
+    line += '  '.repeat(indent);
+  
+    line += node.tagName + '(' + node.nodeId + ')';
   
     // Collect significant attributes
     const attributes = [];
@@ -123,7 +129,7 @@ export function flattenDom(node) {
     const processedChildren = (dom.children || [])
       .map((child) => flattenDom(child))
       .filter((child) => child !== null);
-  
+
     // Generate the text representation
     let textOutput = '';
     for (const child of processedChildren) {

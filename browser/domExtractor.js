@@ -140,7 +140,6 @@ export async function processNode(nodeId, client) {
 
         // Wait for the SVG description to be processed
         const description = await descriptionPromise;
-        console.log(description);
 
         if (description) {
           nodeData.description = description;

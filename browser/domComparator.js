@@ -8,15 +8,6 @@ export function computeDifferencePercentage(oldText, newText) {
   const sanitizedOldText = oldText.replace(nodeIdRegex, '');
   const sanitizedNewText = newText.replace(nodeIdRegex, '');
 
-  // Write sanitized old and new text to disk for debugging
-  try {
-    fs.writeFileSync('sanitized_old.txt', sanitizedOldText);
-    fs.writeFileSync('sanitized_new.txt', sanitizedNewText);
-    console.log('Debug files sanitized_old.txt and sanitized_new.txt have been written successfully.');
-  } catch (error) {
-    console.error('Error writing debug files:', error);
-  }
-
   // Instantiate diff-match-patch
   const dmp = new DiffMatchPatch();
 

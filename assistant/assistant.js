@@ -7,11 +7,9 @@ import { computeDifferencePercentage, findTextDifferences } from '../browser/dom
 
 // Function to process assistant's response
 export async function processAssistantResponse(messages, client, processedDom, domRepresentation, idMapping = {}) {
-  console.log(messages)
   // Redact old DOM contents to save context length
   redactOldDomContents(messages);
-
-  //console.log(messages);
+  console.log(messages)
 
   const response = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
@@ -107,7 +105,6 @@ ${newDomString}
     domRepresentation = newDomRepresentation;
 
     // Recursive call to process assistant's response
-    console.log('idMapping pass', idMapping)
     return await processAssistantResponse(
       messages,
       client,

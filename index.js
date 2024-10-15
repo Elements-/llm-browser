@@ -3,7 +3,7 @@ import './utils/config.js';
 import { setupCLI } from './cli/interface.js';
 import { launchBrowser } from './browser/browser.js';
 import { processDom } from './browser/domProcessor.js';
-import { processAssistantResponse, initializeSystemPrompt, normalizeDomIds } from './assistant/assistant.js';
+import { processAssistantResponse, initializeSystemPrompt } from './assistant/assistant.js';
 
 const startingUrl = 'https://google.com';
 
@@ -12,7 +12,6 @@ let chromeInstance;
 let processedDom;
 let domRepresentation;
 let messages = [];
-let idMapping = {};
 
 (async () => {
   // Initialize browser and get initial DOM
@@ -24,11 +23,6 @@ let idMapping = {};
   // Process DOM
   processedDom = processDom(domRepresentation);
 
-  // Normalize IDs and get the initial idMapping
-  const { newDomString, idMapping: initialIdMapping } = normalizeDomIds(processedDom);
-  processedDom = newDomString;
-  idMapping = initialIdMapping;
-
   // Initialize system prompt with the normalized DOM
   const systemMessage = initializeSystemPrompt(processedDom);
   messages.unshift(systemMessage);
@@ -39,11 +33,9 @@ let idMapping = {};
       // On user input
       messages.push({ role: 'user', content: input });
       try {
-        // Process assistant's response and update idMapping
-        const response = await processAssistantResponse(messages, client, processedDom, domRepresentation, idMapping);
+        const response = await processAssistantResponse(messages, client, processedDom, domRepresentation, );
         processedDom = response.processedDom;
         domRepresentation = response.domRepresentation;
-        idMapping = response.idMapping;
       } catch (error) {
         console.error('Error:', error);
       }

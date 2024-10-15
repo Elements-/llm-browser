@@ -30,7 +30,7 @@ export async function launchBrowser(url) {
     const { root } = await DOM.getDocument();
 
     // Start processing from the root node
-    const domRepresentation = await processNode(root.nodeId, client);
+    const domRepresentation = await processNode(root.backendNodeId, client);
 
     return { domRepresentation, client, chrome };
   } catch (err) {

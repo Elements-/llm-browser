@@ -3,10 +3,10 @@ import { assistantFunctions } from './functions.js';
 import { executeCommand } from '../browser/browser.js';
 import { getDOMRepresentation } from '../browser/domExtractor.js';
 import { processDom } from '../browser/domProcessor.js';
-import { computeDifferencePercentage, findTextDifferences } from '../browser/domComparator.js';
+import { computeGitDiff } from '../browser/domComparator.js';
 
 // Function to process assistant's response
-export async function processAssistantResponse(messages, client, processedDom, domRepresentation, idMapping = {}) {
+export async function processAssistantResponse(messages, client, processedDom, domRepresentation) {
   // Redact old DOM contents to save context length
   redactOldDomContents(messages);
   console.log(messages)
@@ -35,18 +35,7 @@ export async function processAssistantResponse(messages, client, processedDom, d
       argsObj = JSON.parse(args);
     } catch (err) {
       console.error('Error parsing function arguments:', err);
-      return { processedDom, domRepresentation, idMapping };
-    }
-
-    // Map the nodeId back to the original ID using idMapping
-    if (argsObj.nodeId) {
-      const originalNodeId = idMapping[argsObj.nodeId];
-      if (originalNodeId) {
-        argsObj.nodeId = originalNodeId;
-      } else {
-        console.error('NodeId not found in idMapping:', argsObj.nodeId);
-        return { processedDom, domRepresentation, idMapping };
-      }
+      return { processedDom, domRepresentation };
     }
 
     // Execute the function
@@ -58,34 +47,22 @@ export async function processAssistantResponse(messages, client, processedDom, d
     // Process the new DOM representation into text
     const newProcessedDom = processDom(newDomRepresentation);
 
-    // Normalize the IDs in the new processed DOM
-    const { newDomString, idMapping: newIdMapping } = normalizeDomIds(newProcessedDom);
-    idMapping = newIdMapping;
-
     // Now compute the difference percentage
-    const differencePercentage = computeDifferencePercentage(processedDom, newDomString);
+    const { differencePercentage, diffText, changedLines } = computeGitDiff(processedDom, newProcessedDom);
     console.log(`Difference Percentage: ${differencePercentage}%`);
 
-    if (differencePercentage < 25) {
-      // Find differences and annotate the new DOM representation
-      findTextDifferences(domRepresentation, newDomRepresentation);
-
-      // Re-process the new DOM representation after annotation
-      const annotatedProcessedDom = processDom(newDomRepresentation);
-
-      // Normalize the IDs in the annotated processed DOM
-      const { newDomString: annotatedDomString, idMapping: annotatedIdMapping } = normalizeDomIds(annotatedProcessedDom);
-      idMapping = annotatedIdMapping;
-
+    if (differencePercentage < 25 && changedLines < 50) {
       // Include the updated DOM in the function response with adjusted prompt
       messages.push({
         role: 'function',
         name: name,
         content: `Command executed and DOM updated with small changes.
-The *NEW NODE* tags indicate some of the small changes on the page, this may indicate something like a dropdown selection, popup, or alert.
-***Your next action is likely related to these new nodes.***
+First is a git diff format of the small changes on the page, this may indicate something like a dropdown selection, popup, or alert. Your previous likely yielded these changes.
+Git Diff:
+${diffText}
+
 The current DOM content is:
-${annotatedDomString}
+${newProcessedDom}
 `,
       });
     } else {
@@ -95,13 +72,13 @@ ${annotatedDomString}
         name: name,
         content: `Command executed and DOM updated.
 The current DOM content is:
-${newDomString}
+${newProcessedDom}
 `,
       });
     }
 
     // Update processedDom and domRepresentation for the next iteration
-    processedDom = newDomString;
+    processedDom = newProcessedDom;
     domRepresentation = newDomRepresentation;
 
     // Recursive call to process assistant's response
@@ -109,42 +86,24 @@ ${newDomString}
       messages,
       client,
       processedDom,
-      domRepresentation,
-      idMapping
+      domRepresentation
     );
   } else {
     // Assistant provided a response
     console.log('Assistant:', aiMessage.content);
-    return { processedDom, domRepresentation, idMapping };
+    return { processedDom, domRepresentation };
   }
 }
 
 // Function to execute assistant's function call
 async function executeAssistantFunction(name, argsObj, client) {
   if (name === 'click_element') {
-    await executeCommand(client, { type: 'click', nodeId: argsObj.nodeId });
+    await executeCommand(client, { type: 'click', ...argsObj });
   } else if (name === 'enter_text') {
-    await executeCommand(client, { type: 'input', nodeId: argsObj.nodeId, text: argsObj.text });
+    await executeCommand(client, { type: 'input', ...argsObj });
   } else if (name === 'goto_url') {
-    await executeCommand(client, { type: 'goto', url: argsObj.url });
+    await executeCommand(client, { type: 'goto', ...argsObj });
   }
-}
-
-// Function to normalize IDs in the DOM representation
-function normalizeDomIds(domString) {
-  const lines = domString.split('\n');
-  let idCounter = 1;
-  const idMapping = {};
-  const newLines = lines.map(line => {
-    return line.replace(/\((\d+)\)/g, (match, p1) => {
-      const originalId = parseInt(p1, 10);
-      const newId = idCounter++;
-      idMapping[newId] = originalId;
-      return `(${newId})`;
-    });
-  });
-  const newDomString = newLines.join('\n');
-  return { newDomString, idMapping };
 }
 
 // Function to redact old DOM contents from previous messages
@@ -194,6 +153,3 @@ Assist the user in navigating and interacting with web pages by following these 
   // Return the system message
   return { role: 'system', content: systemPrompt };
 }
-
-// At the end of the file
-export { normalizeDomIds };

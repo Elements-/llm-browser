@@ -1,31 +1,31 @@
 export const assistantFunctions = [
     {
       name: 'click_element',
-      description: 'Click on an element by nodeId',
+      description: 'Click on an element by backendNodeId',
       parameters: {
         type: 'object',
         properties: {
-          nodeId: {
+          backendNodeId: {
             type: 'integer',
-            description: 'The nodeId of the element to click',
+            description: 'The backendNodeId of the element to click',
           },
           description: {
             type: 'string',
             description: 'A brief description of the element being clicked',
           },
         },
-        required: ['nodeId', 'description'],
+        required: ['backendNodeId', 'description'],
       },
     },
     {
       name: 'enter_text',
-      description: 'Enter text into an input element by nodeId',
+      description: 'Enter text into an input element by backendNodeId',
       parameters: {
         type: 'object',
         properties: {
-          nodeId: {
+          backendNodeId: {
             type: 'integer',
-            description: 'The nodeId of the input element',
+            description: 'The backendNodeId of the input element',
           },
           text: {
             type: 'string',
@@ -36,7 +36,7 @@ export const assistantFunctions = [
             description: 'A brief description of the input element',
           },
         },
-        required: ['nodeId', 'text', 'description'],
+        required: ['backendNodeId', 'text', 'description'],
       },
     },
     {

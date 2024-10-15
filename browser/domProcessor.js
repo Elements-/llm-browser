@@ -69,7 +69,7 @@ export function flattenDom(node) {
 
     line += '  '.repeat(indent);
   
-    line += node.tagName + '(' + node.nodeId + ')';
+    line += node.tagName + '(' + node.backendNodeId + ')';
   
     // Collect significant attributes
     const attributes = [];

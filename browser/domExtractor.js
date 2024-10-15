@@ -2,17 +2,17 @@ import { waitForDOMStable } from '../utils/waitForDom.js';
 import { processSVG } from './svgProcessor.js';
 
 // Shared processNode function
-export async function processNode(nodeId, client) {
+export async function processNode(backendNodeId, client) {
   const { DOM, Runtime } = client;
   let nodeData = null;
 
   try {
-    const { node } = await DOM.describeNode({ nodeId, depth: 1 });
+    const { node } = await DOM.describeNode({ backendNodeId, depth: 1 });
 
     // Resolve the node to get objectId
     const {
       object: { objectId },
-    } = await DOM.resolveNode({ nodeId });
+    } = await DOM.resolveNode({ backendNodeId });
 
     // Get the tagName
     const { result: tagNameResult } = await Runtime.callFunctionOn({
@@ -27,7 +27,7 @@ export async function processNode(nodeId, client) {
     // Build node data
     nodeData = {
       tagName: tagName,
-      nodeId: nodeId,
+      backendNodeId: backendNodeId,
     };
 
     if (node.nodeType === 1) {
@@ -121,12 +121,12 @@ export async function processNode(nodeId, client) {
         if (node.childNodeCount && node.childNodeCount > 0) {
           nodeData.children = [];
           // Request child nodes
-          await DOM.requestChildNodes({ nodeId, depth: 1 });
-          const { node: updatedNode } = await DOM.describeNode({ nodeId, depth: 1 });
+          await DOM.requestChildNodes({ nodeId: node.nodeId, depth: 1 });
+          const { node: updatedNode } = await DOM.describeNode({ backendNodeId, depth: 1 });
           node.children = updatedNode.children;
 
           for (const child of node.children || []) {
-            const childData = await processNode(child.nodeId, client);
+            const childData = await processNode(child.backendNodeId, client);
             if (childData) {
               nodeData.children.push(childData);
             }
@@ -244,12 +244,12 @@ export async function processNode(nodeId, client) {
     if (node.childNodeCount && node.childNodeCount > 0) {
       nodeData.children = [];
       // Request child nodes
-      await DOM.requestChildNodes({ nodeId, depth: 1 });
-      const { node: updatedNode } = await DOM.describeNode({ nodeId, depth: 1 });
+      await DOM.requestChildNodes({ nodeId: node.nodeId, depth: 1 });
+      const { node: updatedNode } = await DOM.describeNode({ backendNodeId, depth: 1 });
       node.children = updatedNode.children;
 
       for (const child of node.children || []) {
-        const childData = await processNode(child.nodeId, client);
+        const childData = await processNode(child.backendNodeId, client);
         if (childData) {
           nodeData.children.push(childData);
         }
@@ -262,6 +262,7 @@ export async function processNode(nodeId, client) {
     }
   } catch (error) {
     // If an error occurs, skip this node
+    //console.error(`Error processing node ${backendNodeId}:`, error);
     return null;
   }
 
@@ -278,6 +279,6 @@ export async function getDOMRepresentation(client) {
   const { root } = await DOM.getDocument();
 
   // Use the processNode function
-  const domRepresentation = await processNode(root.nodeId, client);
+  const domRepresentation = await processNode(root.backendNodeId, client);
   return domRepresentation;
 }

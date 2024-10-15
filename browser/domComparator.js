@@ -1,86 +1,32 @@
-import DiffMatchPatch from 'diff-match-patch';
-import fs from 'fs';
+import gitDiff from 'git-diff';
 
-// Function to compute the difference percentage between two text strings
-export function computeDifferencePercentage(oldText, newText) {
-  // Remove node IDs from oldText and newText using regex
-  const nodeIdRegex = /\(\d+\)/g;
-  const sanitizedOldText = oldText.replace(nodeIdRegex, '');
-  const sanitizedNewText = newText.replace(nodeIdRegex, '');
-
-  // Instantiate diff-match-patch
-  const dmp = new DiffMatchPatch();
-
-  // Compute the diff using diff-match-patch
-  let diff = dmp.diff_main(sanitizedOldText, sanitizedNewText);
-  // Optional cleanup to improve diff quality
-  dmp.diff_cleanupSemantic(diff);
-
-  let totalLength = 0;
-  let changedLength = 0;
-
-  for (const [op, data] of diff) {
-    totalLength += data.length;
-    if (op !== 0) {
-      // op: -1 = deletion, 1 = insertion, 0 = equality
-      changedLength += data.length;
-    }
+export function computeGitDiff(originalString, newString) {
+  const diffOutput = gitDiff(originalString, newString, { wordDiff: true });
+  if (!diffOutput) {
+    return { differencePercentage: 0, diffText: '', changedLines: 0 };
   }
 
-  const differencePercentage = (changedLength / totalLength) * 100;
+  const diffLines = diffOutput.split('\n');
+  let changesCount = 0;
+  let totalLines = 0;
+  let changedLines = 0;
 
-  console.log(`Difference Percentage: ${differencePercentage}%`);
-  return differencePercentage;
-}
-
-// Function to find differences and annotate the new DOM representation
-export function findTextDifferences(originalNode, newNode) {
-  if (!originalNode && !newNode) {
-    return;
-  }
-
-  if (!originalNode) {
-    // Node is new
-    newNode.isNew = true;
-    if (newNode.children) {
-      for (let i = 0; i < newNode.children.length; i++) {
-        findTextDifferences(null, newNode.children[i]);
+  diffLines.forEach(line => {
+    if (line.startsWith('@@')) {
+      const match = line.match(/@@ -(\d+),(\d+) \+(\d+),(\d+) @@/);
+      if (match) {
+        const originalLines = parseInt(match[2], 10);
+        const newLines = parseInt(match[4], 10);
+        changesCount += Math.abs(originalLines - newLines);
+        totalLines += Math.max(originalLines, newLines);
+        changedLines += Math.abs(originalLines - newLines);
       }
     }
-    return;
-  }
+  });
 
-  if (!newNode) {
-    // Node was removed; handle if necessary
-    return;
-  }
-
-  // Compare nodes
-  if (nodesAreDifferent(originalNode, newNode)) {
-    newNode.isNew = true;
-  }
-
-  // Recursively compare children
-  const maxChildren = Math.max(
-    (originalNode.children ? originalNode.children.length : 0),
-    (newNode.children ? newNode.children.length : 0)
-  );
-
-  for (let i = 0; i < maxChildren; i++) {
-    findTextDifferences(
-      originalNode.children ? originalNode.children[i] : null,
-      newNode.children ? newNode.children[i] : null
-    );
-  }
+  const differencePercentage = (changesCount / totalLines) * 100;
+  return { differencePercentage, diffText: diffOutput, changedLines };
 }
 
-function nodesAreDifferent(nodeA, nodeB) {
-  // Implement a thorough comparison of nodes
-  // This could include comparing tagName, attributes, textContent, etc.
-  if (nodeA.tagName !== nodeB.tagName) return true;
-  if (nodeA.textContent !== nodeB.textContent) return true;
-  // Compare attributes if necessary
-  // ...
 
-  return false;
-}
+

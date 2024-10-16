@@ -118,6 +118,8 @@ async function executeAssistantFunction(name, argsObj, client) {
     await executeCommand(client, { type: 'input', ...argsObj });
   } else if (name === 'goto_url') {
     await executeCommand(client, { type: 'goto', ...argsObj });
+  } else if (name === 'select_option') {
+    await executeCommand(client, { type: 'select', ...argsObj });
   }
 }
 

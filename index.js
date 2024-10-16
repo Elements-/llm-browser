@@ -12,6 +12,7 @@ let chromeInstance;
 let processedDom;
 let domRepresentation;
 let messages = [];
+let isProcessing = false; // Add this flag to track assistant's processing state
 
 (async () => {
   // Initialize browser and get initial DOM
@@ -31,13 +32,21 @@ let messages = [];
   setupCLI(
     async (input) => {
       // On user input
+      if (isProcessing) {
+        console.log('Assistant is processing your previous request. Please wait...');
+        return;
+      }
+
+      isProcessing = true; // Set the flag to indicate processing has started
       messages.push({ role: 'user', content: input });
       try {
-        const response = await processAssistantResponse(messages, client, processedDom, domRepresentation, );
+        const response = await processAssistantResponse(messages, client, processedDom, domRepresentation);
         processedDom = response.processedDom;
         domRepresentation = response.domRepresentation;
       } catch (error) {
         console.error('Error:', error);
+      } finally {
+        isProcessing = false; // Reset the flag after processing is done
       }
     },
     async () => {

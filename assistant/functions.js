@@ -53,4 +53,26 @@ export const assistantFunctions = [
         required: ['url'],
       },
     },
+    {
+      name: 'select_option',
+      description: 'Select an option from a dropdown by backendNodeId',
+      parameters: {
+        type: 'object',
+        properties: {
+          backendNodeId: {
+            type: 'integer',
+            description: 'The backendNodeId of the select element',
+          },
+          value: {
+            type: 'string',
+            description: 'The value attribute of the option to select',
+          },
+          description: {
+            type: 'string',
+            description: 'A brief description of the select element',
+          },
+        },
+        required: ['backendNodeId', 'value', 'description'],
+      },
+    },
   ];

@@ -1,6 +1,5 @@
 import { launch } from 'chrome-launcher';
 import CDP from 'chrome-remote-interface';
-import { waitForDOMStable } from '../utils/waitForDom.js';
 import { processNode } from './domExtractor.js';
 
 // Function to launch the browser and extract the DOM
@@ -50,8 +49,8 @@ export async function executeCommand(client, command) {
   } else if (command.type === 'goto') {
     const { execute } = await import('./commands/navigate.js');
     await execute(client, command);
+  } else if (command.type === 'select') {
+    const { execute } = await import('./commands/select.js');
+    await execute(client, command);
   }
-
-  // Wait for the DOM to update after interactions
-  //await waitForDOMStable(client);
 }

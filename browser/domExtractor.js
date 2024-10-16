@@ -19,15 +19,7 @@ export async function processNode(backendNodeId, client) {
       object: { objectId },
     } = await DOM.resolveNode({ backendNodeId });
 
-    // Get the tagName
-    const { result: tagNameResult } = await Runtime.callFunctionOn({
-      objectId: objectId,
-      functionDeclaration: `function() { return this.tagName ? this.tagName.toLowerCase() : ''; }`,
-      returnByValue: true,
-      awaitPromise: true,
-    });
-
-    const tagName = tagNameResult.value || '';
+    const tagName = node.nodeName.toLowerCase(); 
 
     // Build node data
     nodeData = {
@@ -87,22 +79,13 @@ export async function processNode(backendNodeId, client) {
         await Runtime.releaseObject({ objectId });
       } else {
         // Get attributes
-        const { result: attributesResult } = await Runtime.callFunctionOn({
-          objectId: objectId,
-          functionDeclaration: `
-              function() {
-                  const attrs = {};
-                  for (let attr of this.getAttributeNames()) {
-                      attrs[attr] = this.getAttribute(attr);
-                  }
-                  return attrs;
-              }
-          `,
-          returnByValue: true,
-          awaitPromise: true,
-        });
-
-        const attributes = attributesResult.value;
+        const attributesArray = node.attributes || [];
+        const attributes = {};
+        for (let i = 0; i < attributesArray.length; i += 2) {
+          const attrName = attributesArray[i];
+          const attrValue = attributesArray[i + 1];
+          attributes[attrName] = attrValue;
+        }
 
         // Include paths for links
         if (tagName === 'a' && attributes.href) {

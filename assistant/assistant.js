@@ -4,12 +4,14 @@ import { executeCommand } from '../browser/browser.js';
 import { getDOMRepresentation } from '../browser/domExtractor.js';
 import { processDom } from '../browser/domProcessor.js';
 import { computeGitDiff } from '../browser/domComparator.js';
+import fs from 'fs';
 
 // Function to process assistant's response
 export async function processAssistantResponse(messages, client, processedDom, domRepresentation) {
   // Redact old DOM contents to save context length
   redactOldDomContents(messages);
   console.log(messages)
+  fs.writeFileSync('messages.txt', messages[messages.length - 1].content);
 
   const response = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
@@ -43,15 +45,27 @@ export async function processAssistantResponse(messages, client, processedDom, d
 
     // After executing the function, re-extract and process the DOM
     const newDomRepresentation = await getDOMRepresentation(client);
+    console.log('DOM Extraction Complete')
 
     // Process the new DOM representation into text
     const newProcessedDom = processDom(newDomRepresentation);
+    console.log('DOM Processing Complete')
 
     // Now compute the difference percentage
     const { differencePercentage, diffText, changedLines } = computeGitDiff(processedDom, newProcessedDom);
     console.log(`Difference Percentage: ${differencePercentage}%`);
 
-    if (differencePercentage < 25 && changedLines < 50) {
+    if(differencePercentage === 0) {
+      messages.push({
+        role: 'function',
+        name: name,
+        content: `Command executed and DOM had NO CHANGES.
+The current DOM content is:
+${newProcessedDom}
+`,
+      });
+    }
+    else if (differencePercentage < 25 && (changedLines < 100 || differencePercentage < 5)) {
       // Include the updated DOM in the function response with adjusted prompt
       messages.push({
         role: 'function',
@@ -65,7 +79,8 @@ The current DOM content is:
 ${newProcessedDom}
 `,
       });
-    } else {
+    }
+    else {
       // Include the updated DOM in the function response without annotation
       messages.push({
         role: 'function',

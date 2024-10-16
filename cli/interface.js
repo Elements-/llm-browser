@@ -17,4 +17,6 @@ export function setupCLI(onInput, onClose) {
   rl.on('close', async () => {
     await onClose();
   });
+
+  onInput('go to newegg.com\n')
 }

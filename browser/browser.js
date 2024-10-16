@@ -53,5 +53,5 @@ export async function executeCommand(client, command) {
   }
 
   // Wait for the DOM to update after interactions
-  await waitForDOMStable(client);
+  //await waitForDOMStable(client);
 }

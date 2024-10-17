@@ -14,6 +14,8 @@ export async function extractDOM(client) {
   const { documents, strings } = await DOMSnapshot.captureSnapshot({
     computedStyles: ['display', 'visibility', 'opacity', 'cursor'],
     includeDOMRects: true, // Necessary to get layout information
+    includeTextValue: true,
+    includeInputTextValue: true,
   });
 
   const domData = processSnapshot(documents, strings);
@@ -201,8 +203,33 @@ function buildNodeData(
 
   // Include the current value for inputs and similar elements
   if (['input', 'textarea', 'select', 'option', 'label', 'button'].includes(nodeName)) {
-    if (attributes.value != null) {
-      nodeData.value = attributes.value;
+    let currentValue = null;
+
+    // Fetch the value from nodes.inputValue if available
+    if (nodes.inputValue && nodes.inputValue.index) {
+      const inputValueIndex = nodes.inputValue.index.indexOf(nodeIndex);
+      if (inputValueIndex !== -1) {
+        const valueStringIndex = nodes.inputValue.value[inputValueIndex];
+        currentValue = strings[valueStringIndex];
+      }
+    }
+
+    // For textarea elements, use nodes.textValue
+    else if (nodeName === 'textarea' && nodes.textValue && nodes.textValue.index) {
+      const textValueIndex = nodes.textValue.index.indexOf(nodeIndex);
+      if (textValueIndex !== -1) {
+        const valueStringIndex = nodes.textValue.value[textValueIndex];
+        currentValue = strings[valueStringIndex];
+      }
+    }
+
+    // Fallback to attributes if no value found
+    else if (attributes.value != null) {
+      currentValue = attributes.value;
+    }
+
+    if (currentValue != null) {
+      nodeData.value = currentValue;
     }
   }
 

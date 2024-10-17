@@ -6,7 +6,7 @@ export async function launchBrowser(url) {
   // Launch Chrome with remote debugging and starting URL
   const chrome = await launch({
     startingUrl: url,
-    chromeFlags: ['--disable-gpu', '--no-first-run'],
+    chromeFlags: ['--no-first-run'],
   });
 
   try {

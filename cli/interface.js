@@ -17,6 +17,4 @@ export function setupCLI(onInput, onClose) {
   rl.on('close', async () => {
     await onClose();
   });
-
-  onInput('go to https://www.newegg.com/p/pl?d=ddr3+ram')
 }

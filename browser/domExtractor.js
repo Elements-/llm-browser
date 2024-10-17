@@ -155,6 +155,17 @@ function buildNodeData(
     nodeData.href = attributes.href;
   }
 
+  // Include "title" & "type" & "target" for all
+  if (attributes.title) {
+    nodeData.title = attributes.title;
+  }
+  if (attributes.type) {
+    nodeData.type = attributes.type;
+  }
+  if (attributes.target) {
+    nodeData.target = attributes.target;
+  }
+
   // Include value and selected state for option elements
   if (nodeName === 'option') {
     if (attributes.value != null) {
@@ -264,6 +275,10 @@ function buildNodeData(
   }
 
   // Determine if the element is interactable
+
+  if (nodeName === 'th' && attributes['data-priority'] === '3' && attributes['class'] === 'sorting' && attributes['tabindex'] === '0' && attributes['aria-controls'] === 'tableInvoicesList' && attributes['aria-label'] === 'Invoice Date: activate to sort column ascending') {
+    console.log(nodeName, stylesForNode);
+  }
   const isInteractable = computeInteractable(nodeName, stylesForNode);
   if (isInteractable) {
     nodeData.interactable = true;
@@ -379,13 +394,7 @@ function getChildNodeIndices(nodeIndex, nodes) {
   return childIndices.length > 0 ? childIndices : null;
 }
 
-function getNodeStyles(
-  nodeIndex,
-  nodes,
-  layout,
-  strings,
-  nodeToLayoutIndex
-) {
+function getNodeStyles(nodeIndex, nodes, layout, strings, nodeToLayoutIndex) {
   const stylesForNode = {};
 
   const layoutIndex = nodeToLayoutIndex.get(nodeIndex);
@@ -394,16 +403,15 @@ function getNodeStyles(
   }
 
   const styleIndices = layout.styles[layoutIndex];
+  const computedStyleProperties = ['display', 'visibility', 'opacity', 'cursor'];
 
   if (styleIndices && styleIndices.length > 0) {
-    for (let i = 0; i < styleIndices.length; i += 2) {
-      const nameIndex = styleIndices[i];
-      const valueIndex = styleIndices[i + 1];
-
-      const name = strings[nameIndex];
+    for (let i = 0; i < styleIndices.length; i++) {
+      const propertyName = computedStyleProperties[i];
+      const valueIndex = styleIndices[i];
       const value = strings[valueIndex];
 
-      stylesForNode[name] = value;
+      stylesForNode[propertyName] = value;
     }
   }
 

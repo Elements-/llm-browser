@@ -7,6 +7,7 @@ export async function launchBrowser(url) {
   const chrome = await launch({
     startingUrl: url,
     chromeFlags: ['--no-first-run'],
+    userDataDir: './chrome-profile',
   });
 
   try {

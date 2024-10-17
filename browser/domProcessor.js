@@ -75,16 +75,27 @@ export function generateText(node, indent = 0) {
     attributes.push(`value="${node.value}"`);
   }
   if (node.description) {
-    attributes.push(`description: "${node.description}"`);
+    attributes.push(`description="${node.description}"`);
+  }
+  if (node.title) {
+    attributes.push(`title="${node.title}"`);
+  }
+  if (node.type) {
+    attributes.push(`type="${node.type}"`);
   }
   if (node.ariaAttributes) {
     for (const [key, value] of Object.entries(node.ariaAttributes)) {
       attributes.push(`${key}="${value}"`);
     }
   }
+  
   if (node.href) {
-    const truncatedHref = node.href.length > 25 ? node.href.substring(0, 25) + '...' : node.href;
-    attributes.push(`href="${truncatedHref}"`);
+    if (node.target === '_blank') {
+      attributes.push(`href="${node.href}"`, `note="not interactable, use GOTO url, page opens a new tab"`);
+    } else {
+      const truncatedHref = node.href.length > 25 ? node.href.substring(0, 25) + '...' : node.href;
+      attributes.push(`href="${truncatedHref}"`);
+    }
   }
 
   // Include attributes in the line

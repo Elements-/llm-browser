@@ -18,5 +18,5 @@ export function setupCLI(onInput, onClose) {
     await onClose();
   });
 
-  onInput('go to newegg.com\n')
+  onInput('go to https://www.newegg.com/p/pl?d=ddr3+ram')
 }

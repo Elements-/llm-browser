@@ -6,6 +6,7 @@ export async function execute(client, command) {
       const {
         object: { objectId },
       } = await DOM.resolveNode({ backendNodeId });
+
       await Runtime.callFunctionOn({
         objectId,
         functionDeclaration: 'function() { this.click(); }',

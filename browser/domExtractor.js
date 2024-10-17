@@ -1,245 +1,121 @@
 import { waitForDOMStable } from '../utils/waitForDom.js';
-import { processSVG } from './svgProcessor.js';
 
-/*
-- function breakout
-- reduce callFunctionOn, seek native properties where possible
-*/
+// Function to get the entire DOM tree and start processing
+export async function extractDOM(client) {
+  const { DOMSnapshot } = client;
 
-// Shared processNode function
-export async function processNode(backendNodeId, client) {
-  const { DOM, Runtime } = client;
-  let nodeData = null;
+  // Wait for the DOM to be stable
+  await waitForDOMStable(client);
 
-  try {
-    const { node } = await DOM.describeNode({ backendNodeId, depth: 1 });
+  // Enable DOMSnapshot
+  await DOMSnapshot.enable();
 
-    // Resolve the node to get objectId
-    const {
-      object: { objectId },
-    } = await DOM.resolveNode({ backendNodeId });
+  // Capture the snapshot
+  const { documents, strings } = await DOMSnapshot.captureSnapshot({
+    computedStyles: ['display', 'visibility', 'opacity', 'cursor'],
+    includeDOMRects: true, // Necessary to get layout information
+  });
 
-    const tagName = node.nodeName.toLowerCase(); 
+  const domData = processSnapshot(documents, strings);
 
-    // Build node data
-    nodeData = {
-      tagName: tagName,
-      backendNodeId: backendNodeId,
-    };
+  return domData;
+}
 
-    if (node.nodeType === 1) {
-      // Element node
-      // Execute function in page context to check if the element is visible or can be scrolled to
-      const { result: visibilityResult } = await Runtime.callFunctionOn({
-        objectId: objectId,
-        functionDeclaration: `
-            function() {
-                const rect = this.getBoundingClientRect();
-                const documentHeight = Math.max(
-                    document.body.scrollHeight,
-                    document.documentElement.scrollHeight,
-                    document.body.offsetHeight,
-                    document.documentElement.offsetHeight,
-                    document.body.clientHeight,
-                    document.documentElement.clientHeight
-                );
-                const documentWidth = Math.max(
-                    document.body.scrollWidth,
-                    document.documentElement.scrollWidth,
-                    document.body.offsetWidth,
-                    document.documentElement.offsetWidth,
-                    document.body.clientWidth,
-                    document.documentElement.clientWidth
-                );
+function processSnapshot(documents, strings) {
+  const domData = [];
 
-                return rect.width > 0 &&
-                       rect.height > 0 &&
-                       rect.bottom > 0 &&
-                       rect.right > 0 &&
-                       rect.top < documentHeight &&
-                       rect.left < documentWidth;
-            }
-        `,
-        returnByValue: true,
-        awaitPromise: true,
-      });
+  for (const document of documents) {
+    const { nodes, layout } = document;
 
-      let isVisible = visibilityResult.value;
+    // Build a map from nodeIndex to layoutIndex
+    const nodeToLayoutIndex = buildNodeToLayoutIndexMap(layout);
 
-      if (tagName === 'option') {
-        isVisible = true;
-      }
+    // Build a map from node index to children node indices
+    const childMap = buildChildMap(nodes);
 
-
-      nodeData.isVisible = isVisible;
-
-      // Only proceed if the element is in the viewport
-      if (!isVisible) {
-        // Release the object but do not return early
-        await Runtime.releaseObject({ objectId });
-      } else {
-        // Get attributes
-        const attributesArray = node.attributes || [];
-        const attributes = {};
-        for (let i = 0; i < attributesArray.length; i += 2) {
-          const attrName = attributesArray[i];
-          const attrValue = attributesArray[i + 1];
-          attributes[attrName] = attrValue;
+    // Build the node data starting from the root nodes
+    for (let i = 0; i < nodes.nodeType.length; i++) {
+      if (nodes.parentIndex[i] === -1) {
+        const nodeData = buildNodeData(
+          i,
+          document,
+          childMap,
+          strings,
+          nodes,
+          layout,
+          nodeToLayoutIndex
+        );
+        if (nodeData) {
+          domData.push(nodeData);
         }
-
-        // Include paths for links
-        if (tagName === 'a' && attributes.href) {
-          nodeData.href = attributes.href;
-        }
-
-        // Handle SVG elements
-        if (tagName === 'svg') {
-          // Get the SVG outerHTML
-          const { result: outerHTMLResult } = await Runtime.callFunctionOn({
-            objectId: objectId,
-            functionDeclaration: `function() { return this.outerHTML; }`,
-            returnByValue: true,
-            awaitPromise: true,
-          });
-
-          const svgMarkup = outerHTMLResult.value;
-
-          // Process the SVG to get a description in parallel
-          const descriptionPromise = processSVG(svgMarkup);
-
-          // Proceed to process child nodes if any
-          if (node.childNodeCount && node.childNodeCount > 0) {
-            nodeData.children = [];
-            // Request child nodes
-            await DOM.requestChildNodes({ nodeId: node.nodeId, depth: 1 });
-            const { node: updatedNode } = await DOM.describeNode({ backendNodeId, depth: 1 });
-            node.children = updatedNode.children;
-
-            for (const child of node.children || []) {
-
-              const childData = await processNode(child.backendNodeId, client);
-              if (childData) {
-                nodeData.children.push(childData);
-              }
-            }
-
-            // Clean up children array if empty
-            if (nodeData.children.length === 0) {
-              delete nodeData.children;
-            }
-          }
-
-          // Wait for the SVG description to be processed
-          const description = await descriptionPromise;
-
-          if (description) {
-            nodeData.description = description;
-          }
-
-          // Release the object
-          await Runtime.releaseObject({ objectId });
-        }
-
-        // Get text content excluding child elements
-        const { result: textContentResult } = await Runtime.callFunctionOn({
-          objectId: objectId,
-          functionDeclaration: `
-              function() { 
-                  let text = '';
-                  for (let node of this.childNodes) {
-                      if (node.nodeType === Node.TEXT_NODE) {
-                          text += node.textContent;
-                      }
-                  }
-                  return text.trim();
-              }
-          `,
-          returnByValue: true,
-          awaitPromise: true,
-        });
-
-        const textContent = textContentResult.value || '';
-
-        if (textContent) {
-          nodeData.textContent = textContent;
-        }
-
-        // Determine if the element is interactable
-        const interactableTags = ['a', 'button', 'input', 'select', 'textarea', 'option', 'label'];
-        const { result: cursorStyleResult } = await Runtime.callFunctionOn({
-          objectId: objectId,
-          functionDeclaration: `
-              function() {
-                  return window.getComputedStyle(this).cursor;
-              }
-          `,
-          returnByValue: true,
-          awaitPromise: true,
-        });
-        const cursorStyle = cursorStyleResult.value;
-        const isInteractable = interactableTags.includes(tagName) || cursorStyle === 'pointer';
-
-        if (isInteractable) {
-          nodeData.interactable = true;
-
-          // Add disabled flag if the element is disabled
-          const { result: disabledResult } = await Runtime.callFunctionOn({
-            objectId: objectId,
-            functionDeclaration: `
-                function() {
-                    return this.disabled || this.getAttribute('aria-disabled') === 'true';
-                }
-            `,
-            returnByValue: true,
-            awaitPromise: true,
-          });
-          const isDisabled = disabledResult.value;
-          if (isDisabled) {
-            nodeData.disabled = true;
-          }
-
-          // Include the current value for inputs and similar elements
-          if (['input', 'textarea', 'select'].includes(tagName)) {
-            const { result: valueResult } = await Runtime.callFunctionOn({
-              objectId: objectId,
-              functionDeclaration: `function() { return this.value; }`,
-              returnByValue: true,
-              awaitPromise: true,
-            });
-            const value = valueResult.value;
-            if (value) {
-              nodeData.value = value;
-            }
-          }
-        }
-
-        // Get aria attributes
-        const ariaAttributes = {};
-        for (const [attr, value] of Object.entries(attributes)) {
-          if (attr.startsWith('aria-') && value !== null && value !== undefined) {
-            ariaAttributes[attr] = value;
-          }
-        }
-
-        if (Object.keys(ariaAttributes).length > 0) {
-          nodeData.ariaAttributes = ariaAttributes;
-        }
-
-        // Release the object
-        await Runtime.releaseObject({ objectId });
       }
     }
+  }
+
+  return domData;
+}
+
+// Build a map from nodeIndex to layoutIndex
+function buildNodeToLayoutIndexMap(layout) {
+  const nodeToLayoutIndex = new Map();
+  for (let layoutIndex = 0; layoutIndex < layout.nodeIndex.length; layoutIndex++) {
+    const nodeIndex = layout.nodeIndex[layoutIndex];
+    nodeToLayoutIndex.set(nodeIndex, layoutIndex);
+  }
+  return nodeToLayoutIndex;
+}
+
+function buildChildMap(nodes) {
+  const childMap = new Map();
+
+  for (let i = 0; i < nodes.nodeType.length; i++) {
+    const parentIndex = nodes.parentIndex[i];
+    if (parentIndex !== -1) {
+      if (!childMap.has(parentIndex)) {
+        childMap.set(parentIndex, []);
+      }
+      childMap.get(parentIndex).push(i);
+    }
+  }
+
+  return childMap;
+}
+
+function buildNodeData(
+  nodeIndex,
+  document,
+  childMap,
+  strings,
+  nodes,
+  layout,
+  nodeToLayoutIndex
+) {
+  const nodeType = nodes.nodeType[nodeIndex];
+  const nodeNameIndex = nodes.nodeName[nodeIndex];
+  const nodeName = strings[nodeNameIndex].toLowerCase();
+
+  // Handle DOCUMENT_NODE
+  if (nodeType === 9) {
+    const nodeData = {
+      tagName: '#document',
+      backendNodeId: nodes.backendNodeId[nodeIndex],
+    };
 
     // Recursively process child nodes
-    if (node.childNodeCount && node.childNodeCount > 0) {
+    const childIndices = childMap.get(nodeIndex);
+    if (childIndices && childIndices.length > 0) {
       nodeData.children = [];
-      // Request child nodes
-      await DOM.requestChildNodes({ nodeId: node.nodeId, depth: 1 });
-      const { node: updatedNode } = await DOM.describeNode({ backendNodeId, depth: 1 });
-      node.children = updatedNode.children;
 
-      for (const child of node.children || []) {
-        const childData = await processNode(child.backendNodeId, client);
+      for (const childIndex of childIndices) {
+        const childData = buildNodeData(
+          childIndex,
+          document,
+          childMap,
+          strings,
+          nodes,
+          layout,
+          nodeToLayoutIndex
+        );
         if (childData) {
           nodeData.children.push(childData);
         }
@@ -250,25 +126,309 @@ export async function processNode(backendNodeId, client) {
         delete nodeData.children;
       }
     }
-  } catch (error) {
-    // If an error occurs, skip this node
-    //console.error(`Error processing node ${backendNodeId}:`, error);
+
+    return nodeData;
+  }
+
+  // Only process element nodes
+  if (nodeType !== 1) {
     return null;
   }
 
-  return nodeData;
+  // Exclude certain tags
+  if (['style', 'script', 'link', 'meta', 'hr', 'br', 'path'].includes(nodeName)) {
+    return null;
+  }
+
+  const nodeData = {
+    tagName: nodeName,
+    backendNodeId: nodes.backendNodeId[nodeIndex],
+  };
+
+  // Get attributes
+  const attributes = getNodeAttributes(nodeIndex, nodes, strings);
+
+  // Include paths for links
+  if (nodeName === 'a' && attributes.href) {
+    nodeData.href = attributes.href;
+  }
+
+  // Include value and selected state for option elements
+  if (nodeName === 'option') {
+    if (attributes.value != null) {
+      nodeData.value = attributes.value;
+    }
+    if ('selected' in attributes) {
+      nodeData.selected = true;
+    }
+    // Get text content for option elements
+    const nodeValueIndex = nodes.nodeValue[nodeIndex];
+    if (nodeValueIndex !== -1) {
+      const nodeValue = strings[nodeValueIndex];
+      if (nodeValue && nodeValue.trim()) {
+        nodeData.textContent = nodeValue.trim();
+      }
+    }
+  }
+
+  // Include value for select elements
+  if (nodeName === 'select') {
+    if (attributes.value != null) {
+      nodeData.value = attributes.value;
+    }
+  }
+
+  // Include interactable state
+  if (['select', 'option'].includes(nodeName)) {
+    nodeData.interactable = true;
+  }
+
+  // Get aria attributes
+  const ariaAttributes = {};
+  for (const [attr, value] of Object.entries(attributes)) {
+    if (attr.startsWith('aria-') && value != null) {
+      ariaAttributes[attr] = value;
+    }
+  }
+  if (Object.keys(ariaAttributes).length > 0) {
+    nodeData.ariaAttributes = ariaAttributes;
+  }
+
+  // Include disabled state if the element is disabled
+  if (attributes.disabled != null || attributes['aria-disabled'] === 'true') {
+    nodeData.disabled = true;
+  }
+
+  // Include the current value for inputs and similar elements
+  if (['input', 'textarea', 'select', 'option', 'label', 'button'].includes(nodeName)) {
+    if (attributes.value != null) {
+      nodeData.value = attributes.value;
+    }
+  }
+
+  // Get text content from child text nodes
+  const textContent = getTextContent(nodeIndex, nodes, strings);
+  if (textContent) {
+    nodeData.textContent = textContent;
+  }
+
+  // Get computed styles
+  const stylesForNode = getNodeStyles(
+    nodeIndex,
+    nodes,
+    layout,
+    strings,
+    nodeToLayoutIndex
+  );
+
+  // Determine visibility from computed styles and layout
+  const isVisible = computeVisibility(
+    nodeIndex,
+    document,
+    stylesForNode,
+    nodes,
+    nodeToLayoutIndex
+  );
+  nodeData.isVisible = isVisible;
+
+  // **Ensure select and option elements are marked as visible**
+  if (['select', 'option'].includes(nodeName)) {
+    nodeData.isVisible = true;
+  }
+
+  // Determine if the element is interactable
+  const isInteractable = computeInteractable(nodeName, stylesForNode);
+  if (isInteractable) {
+    nodeData.interactable = true;
+  }
+
+  // Recursively process child nodes
+  const childIndices = childMap.get(nodeIndex);
+  let hasVisibleChild = false;
+  if (childIndices && childIndices.length > 0) {
+    nodeData.children = [];
+
+    for (const childIndex of childIndices) {
+      const childData = buildNodeData(
+        childIndex,
+        document,
+        childMap,
+        strings,
+        nodes,
+        layout,
+        nodeToLayoutIndex
+      );
+      if (childData) {
+        nodeData.children.push(childData);
+        if (childData.isVisible || (childData.children && childData.children.length > 0)) {
+          hasVisibleChild = true;
+        }
+      }
+    }
+
+    // **If this is a select element and has no children, attempt to include option elements**
+    if (nodeName === 'select' && (!nodeData.children || nodeData.children.length === 0)) {
+      // **Attempt to include option elements even if they were previously filtered out**
+      nodeData.children = [];
+      for (const childIndex of childIndices) {
+        const childNodeNameIndex = nodes.nodeName[childIndex];
+        const childNodeName = strings[childNodeNameIndex].toLowerCase();
+        if (childNodeName === 'option') {
+          const optionData = buildNodeData(
+            childIndex,
+            document,
+            childMap,
+            strings,
+            nodes,
+            layout,
+            nodeToLayoutIndex
+          );
+          if (optionData) {
+            nodeData.children.push(optionData);
+          }
+        }
+      }
+    }
+
+    // Clean up children array if empty
+    if (nodeData.children.length === 0) {
+      delete nodeData.children;
+    }
+  }
+
+  // Include the node if it is visible or has visible children
+  if (nodeData.isVisible || hasVisibleChild) {
+    return nodeData;
+  }
+
+  // Exclude the node if it is not visible and has no visible children
+  return null;
 }
 
-// Function to get the updated DOM representation
-export async function getDOMRepresentation(client) {
-  const { DOM } = client;
+function getNodeAttributes(nodeIndex, nodes, strings) {
+  const attributes = {};
+  const attrIndices = nodes.attributes[nodeIndex];
 
-  // Wait for the DOM to be ready
-  await waitForDOMStable(client);
+  for (let i = 0; i < attrIndices.length; i += 2) {
+    const name = strings[attrIndices[i]];
+    const value = strings[attrIndices[i + 1]];
+    attributes[name] = value;
+  }
 
-  const { root } = await DOM.getDocument();
+  return attributes;
+}
 
-  // Use the processNode function
-  const domRepresentation = await processNode(root.backendNodeId, client);
-  return domRepresentation;
+function getTextContent(nodeIndex, nodes, strings) {
+  let text = '';
+
+  const childIndices = getChildNodeIndices(nodeIndex, nodes);
+
+  if (childIndices) {
+    for (const childIndex of childIndices) {
+      const childNodeType = nodes.nodeType[childIndex];
+      if (childNodeType === 3) {
+        // TEXT_NODE
+        const nodeValueIndex = nodes.nodeValue[childIndex];
+        const nodeValue = strings[nodeValueIndex];
+        if (nodeValue && nodeValue.trim()) {
+          text += nodeValue.trim() + ' ';
+        }
+      }
+    }
+  }
+
+  return text.trim() || null;
+}
+
+function getChildNodeIndices(nodeIndex, nodes) {
+  const childIndices = [];
+
+  for (let i = 0; i < nodes.nodeType.length; i++) {
+    if (nodes.parentIndex[i] === nodeIndex) {
+      childIndices.push(i);
+    }
+  }
+
+  return childIndices.length > 0 ? childIndices : null;
+}
+
+function getNodeStyles(
+  nodeIndex,
+  nodes,
+  layout,
+  strings,
+  nodeToLayoutIndex
+) {
+  const stylesForNode = {};
+
+  const layoutIndex = nodeToLayoutIndex.get(nodeIndex);
+  if (layoutIndex === undefined || !layout.styles[layoutIndex]) {
+    return stylesForNode;
+  }
+
+  const styleIndices = layout.styles[layoutIndex];
+
+  if (styleIndices && styleIndices.length > 0) {
+    for (let i = 0; i < styleIndices.length; i += 2) {
+      const nameIndex = styleIndices[i];
+      const valueIndex = styleIndices[i + 1];
+
+      const name = strings[nameIndex];
+      const value = strings[valueIndex];
+
+      stylesForNode[name] = value;
+    }
+  }
+
+  return stylesForNode;
+}
+
+function computeVisibility(
+  nodeIndex,
+  document,
+  stylesForNode,
+  nodes,
+  nodeToLayoutIndex
+) {
+  const { layout } = document;
+
+  const layoutIndex = nodeToLayoutIndex.get(nodeIndex);
+  if (layoutIndex === undefined || !layout.bounds[layoutIndex]) {
+    return false;
+  }
+
+  const [x, y, width, height] = layout.bounds[layoutIndex];
+
+  // Check if the node has size
+  if (width <= 0 || height <= 0) {
+    return false;
+  }
+
+  // Check computed styles
+  const display = stylesForNode['display'];
+  const visibility = stylesForNode['visibility'];
+  const opacity = parseFloat(stylesForNode['opacity'] || '1');
+
+  if (display === 'none' || visibility === 'hidden' || opacity === 0) {
+    return false;
+  }
+
+  // The node is visible
+  return true;
+}
+
+function computeInteractable(nodeName, stylesForNode) {
+  const interactableTags = [
+    'a',
+    'button',
+    'input',
+    'select',
+    'textarea',
+    'option',
+    'label',
+  ];
+  const hasPointerCursor = stylesForNode['cursor'] === 'pointer';
+  const isInteractableTag = interactableTags.includes(nodeName);
+
+  return isInteractableTag || hasPointerCursor;
 }

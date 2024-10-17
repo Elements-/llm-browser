@@ -1,7 +1,7 @@
 import { openaiClient } from '../api/openaiClient.js';
 import { assistantFunctions } from './functions.js';
 import { executeCommand } from '../browser/browser.js';
-import { getDOMRepresentation } from '../browser/domExtractor.js';
+import { extractDOM } from '../browser/domExtractor.js';
 import { processDom } from '../browser/domProcessor.js';
 import { computeGitDiff } from '../browser/domComparator.js';
 import fs from 'fs';
@@ -44,7 +44,7 @@ export async function processAssistantResponse(messages, client, processedDom, d
     await executeAssistantFunction(name, argsObj, client);
 
     // After executing the function, re-extract and process the DOM
-    const newDomRepresentation = await getDOMRepresentation(client);
+    const newDomRepresentation = await extractDOM(client);
     console.log('DOM Extraction Complete')
 
     // Process the new DOM representation into text

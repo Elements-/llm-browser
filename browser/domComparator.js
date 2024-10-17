@@ -1,6 +1,9 @@
 import gitDiff from 'git-diff';
 
 export function computeGitDiff(originalString, newString) {
+  if(!originalString) originalString = ''
+  if(!newString) newString = ''
+  
   const diffOutput = gitDiff(originalString, newString, { wordDiff: false });
   if (!diffOutput) {
     return { differencePercentage: 0, diffText: '', changedLines: 0 };

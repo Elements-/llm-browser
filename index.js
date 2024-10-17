@@ -16,16 +16,13 @@ let isProcessing = false; // Add this flag to track assistant's processing state
 
 (async () => {
   // Initialize browser and get initial DOM
-  const { domRepresentation: initialDomRepresentation, client: cdpClient, chrome } = await launchBrowser(startingUrl);
+  const { client: cdpClient, chrome } = await launchBrowser(startingUrl);
   client = cdpClient;
   chromeInstance = chrome;
-  domRepresentation = initialDomRepresentation;
 
-  // Process DOM
-  processedDom = processDom(domRepresentation);
 
   // Initialize system prompt with the normalized DOM
-  const systemMessage = initializeSystemPrompt(processedDom);
+  const systemMessage = initializeSystemPrompt('');
   messages.unshift(systemMessage);
 
   // Start interaction

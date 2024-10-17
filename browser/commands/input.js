@@ -1,8 +1,6 @@
 export async function execute(client, command) {
     const { DOM, Input, Runtime } = client;
     const { backendNodeId, text } = command;
-  
-    console.log('input command', command);
 
     try {
       await DOM.focus({ backendNodeId });

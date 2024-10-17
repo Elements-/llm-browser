@@ -1,6 +1,5 @@
 import { launch } from 'chrome-launcher';
 import CDP from 'chrome-remote-interface';
-import { processNode } from './domExtractor.js';
 
 // Function to launch the browser and extract the DOM
 export async function launchBrowser(url) {
@@ -15,23 +14,18 @@ export async function launchBrowser(url) {
     const client = await CDP({ port: chrome.port });
 
     // Extract domains we need
-    const { Network, Page, DOM } = client;
+    const { Network, Page, DOM, CSS } = client;
 
     // Enable events on domains we are interested in
     await Network.enable();
     await Page.enable();
     await DOM.enable();
+    await CSS.enable();
 
     // Wait for the page to load
-    await Page.loadEventFired();
+    //await Page.loadEventFired();
 
-    // Get the root DOM node (#document)
-    const { root } = await DOM.getDocument();
-
-    // Start processing from the root node
-    const domRepresentation = await processNode(root.backendNodeId, client);
-
-    return { domRepresentation, client, chrome };
+    return { chrome, client };
   } catch (err) {
     console.error('Error during processing:', err);
     throw err;

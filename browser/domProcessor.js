@@ -31,6 +31,11 @@ function reduceDom(node) {
     node.description ||
     (node.ariaAttributes && Object.keys(node.ariaAttributes).length > 0);
 
+  // **Add exception for option elements under select**
+  if (node.tagName === 'option' && node.value != null) {
+    return node; // Keep option nodes with values
+  }
+
   if (hasMeaningfulContent) {
     // Node is meaningful, keep it
     return node;
@@ -52,29 +57,34 @@ export function generateText(node, indent = 0) {
 
   let line = '  '.repeat(indent);
 
-  line += node.tagName + '(' + node.backendNodeId + ')';
+  line += node.tagName;
+  if (node.interactable) {
+    line += '(' + node.backendNodeId + ')';
+  }
 
   // Collect significant attributes
   const attributes = [];
-  if (node.href) {
-    attributes.push(`href="${node.href}"`);
-  }
+
   if (node.interactable) {
-    attributes.push(`interactable: true`);
+    attributes.push(`interactable`);
   }
   if (node.disabled) {
-    attributes.push(`disabled: true`);
+    attributes.push(`disabled`);
   }
   if (node.value) {
     attributes.push(`value="${node.value}"`);
+  }
+  if (node.description) {
+    attributes.push(`description: "${node.description}"`);
   }
   if (node.ariaAttributes) {
     for (const [key, value] of Object.entries(node.ariaAttributes)) {
       attributes.push(`${key}="${value}"`);
     }
   }
-  if (node.description) {
-    attributes.push(`description: "${node.description}"`);
+  if (node.href) {
+    const truncatedHref = node.href.length > 25 ? node.href.substring(0, 25) + '...' : node.href;
+    attributes.push(`href="${truncatedHref}"`);
   }
 
   // Include attributes in the line
@@ -84,18 +94,47 @@ export function generateText(node, indent = 0) {
 
   // Include text content if available
   if (node.textContent) {
-    line += ` "${node.textContent}"`;
+    line += ` ${node.textContent}`;
   }
 
   line += '\n';
 
+  // **Ensure options are displayed under select elements**
+  if (node.tagName === 'select' && node.children && node.children.length > 0) {
+    for (const child of node.children) {
+      if (child.tagName === 'option') {
+        const optionLine = '  '.repeat(indent + 1) + 'option';
+        const optionAttributes = [];
+
+        if (child.value) {
+          optionAttributes.push(`value="${child.value}"`);
+        }
+        if (child.selected) {
+          optionAttributes.push(`selected`);
+        }
+
+        // Include attributes for the option
+        const optionLineWithAttributes =
+          optionAttributes.length > 0
+            ? optionLine + ' [' + optionAttributes.join(', ') + ']'
+            : optionLine;
+
+        // Include text content if available
+        const optionTextContent = child.textContent ? ` ${child.textContent}` : '';
+        line += optionLineWithAttributes + optionTextContent + '\n';
+      }
+    }
+  }
+
   // Process child nodes
   if (node.children && node.children.length > 0) {
     for (const child of node.children) {
-      // Skip undefined or null child nodes
+      // Skip option children already processed
+      if (node.tagName === 'select' && child.tagName === 'option') {
+        continue;
+      }
       if (child) {
         const childText = generateText(child, indent + 1);
-        // Only add if childText is not empty
         if (childText.trim() !== '') {
           line += childText;
         }
@@ -109,8 +148,7 @@ export function generateText(node, indent = 0) {
 // Function to process the DOM and generate text output
 export function processDom(dom) {
   // Reduce the DOM before generating text
-  const reducedDom = reduceDom(dom);
-
+  const reducedDom = reduceDom(dom[0]);
   // Generate the text representation
   const textOutput = generateText(reducedDom);
 

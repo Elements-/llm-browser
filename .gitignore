@@ -1,5 +1,6 @@
 .env
 package-lock.json
 node_modules
-messages.txt
+messages.json
+dom_content.txt
 chrome-profile/**

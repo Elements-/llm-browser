@@ -1,172 +1,173 @@
 import { openaiClient } from '../api/openaiClient.js';
-import { assistantFunctions } from './functions.js';
-import { executeCommand } from '../browser/browser.js';
+import { assistantFunctions, executeAssistantFunction } from './functions.js';
 import { extractDOM } from '../browser/domExtractor.js';
 import { processDom } from '../browser/domProcessor.js';
 import { computeGitDiff } from '../browser/domComparator.js';
 import fs from 'fs';
+import { redactOldDomContents } from '../utils/redactOldDomContents.js';
 
 // Function to process assistant's response
-export async function processAssistantResponse(messages, client, processedDom, domRepresentation) {
+export async function processAssistantResponse(messages, client, processedDom, domRepresentation, step = 'plan') {
   // Redact old DOM contents to save context length
   redactOldDomContents(messages);
-  console.log(messages)
-  fs.writeFileSync('messages.txt', messages[messages.length - 1].content);
+
+  // Prepare the assistant's prompt based on the current step
+  let assistantPrompt = '';
+  if (step === 'plan') {
+    assistantPrompt = 'Please provide a detailed plan to accomplish the user\'s instruction.';
+  } else if (step === 'execute') {
+    assistantPrompt = 'Proceed to execute the planned actions step-by-step.';
+  } else if (step === 'reflect') {
+    assistantPrompt = 'Reflect on the executed actions and determine if the task was completed successfully and note any issues. Adjust the plan if necessary.';
+  }
+
+  // Add the assistant prompt to messages
+  messages.push({
+    role: 'system',
+    content: assistantPrompt
+  });
 
   const response = await openaiClient.chat.completions.create({
     model: 'gpt-4o',
     messages: messages,
     functions: assistantFunctions,
-    function_call: 'auto',
-    temperature: 0.2,
+    function_call: step === 'execute' ? 'auto' : 'none', // Prevent function calls during plan and reflect
+    temperature: 0.01,
     frequency_penalty: 1
   });
 
   const aiMessage = response.choices[0].message;
+
+  // Ensure the assistant doesn't perform actions during plan or reflect
+  if ((step === 'plan' || step === 'reflect') && aiMessage.function_call) {
+    // Ignore any function calls during plan or reflect
+    console.log(`Warning: Assistant attempted to perform an action during the ${step.toUpperCase()} step. This action will be ignored.`);
+    aiMessage.function_call = null;
+  }
+
   messages.push(aiMessage);
 
   // Log context size and messages after receiving response
-  console.log('\n--- After OpenAI API Call ---');
+  console.log(`\n--- After OpenAI API Call (${step.toUpperCase()} Step) ---`);
   console.log(`Prompt tokens: ${response.usage.prompt_tokens}`);
 
-  if (aiMessage.function_call) {
-    // Assistant called a function
-    const { name, arguments: args } = aiMessage.function_call;
-    let argsObj = {};
-    try {
-      argsObj = JSON.parse(args);
-    } catch (err) {
-      console.error('Error parsing function arguments:', err);
-      return { processedDom, domRepresentation };
-    }
+  if (step === 'plan') {
+    // Proceed to execution
+    printDebugInfo(messages);
+    return await processAssistantResponse(
+      messages,
+      client,
+      processedDom,
+      domRepresentation,
+      'execute'
+    );
+  } else if (step === 'execute') {
+    if (aiMessage.function_call) {
+      // Assistant called a function during the execute step
+      const { name, arguments: args } = aiMessage.function_call;
+      let argsObj = {};
+      try {
+        argsObj = JSON.parse(args);
+      } catch (err) {
+        console.error('Error parsing function arguments:', err);
+        return { processedDom, domRepresentation };
+      }
 
-    // Execute the function
-    await executeAssistantFunction(name, argsObj, client);
+      // Execute the function
+      await executeAssistantFunction(name, argsObj, client);
 
-    // After executing the function, re-extract and process the DOM
-    const newDomRepresentation = await extractDOM(client);
-    console.log('DOM Extraction Complete')
+      // After executing the function, re-extract and process the DOM
+      const newDomRepresentation = await extractDOM(client);
+      console.log('DOM Extraction Complete');
 
-    // Process the new DOM representation into text
-    const newProcessedDom = processDom(newDomRepresentation);
-    console.log('DOM Processing Complete')
+      // Process the new DOM representation into text
+      const newProcessedDom = processDom(newDomRepresentation);
+      console.log('DOM Processing Complete');
 
-    // Now compute the difference percentage
-    const { differencePercentage, diffText, changedLines } = computeGitDiff(processedDom, newProcessedDom);
-    console.log(`Difference Percentage: ${differencePercentage}%`);
+      // Now compute the difference percentage
+      const { differencePercentage, diffText, changedLines } = computeGitDiff(processedDom, newProcessedDom);
+      console.log(`Difference Percentage: ${differencePercentage}%`);
 
-    if(differencePercentage === 0) {
-      messages.push({
-        role: 'function',
-        name: name,
-        content: `Command executed and DOM had NO CHANGES.
+      // Prepare function result message based on the change
+      let functionContent;
+      if (differencePercentage === 0) {
+        functionContent = `Command executed but the DOM had NO CHANGES.
 The current DOM content is:
 ${newProcessedDom}
-`,
-      });
-    }
-    else if (differencePercentage < 25 && (changedLines < 100 || differencePercentage < 5)) {
-      // Include the updated DOM in the function response with adjusted prompt
-      messages.push({
-        role: 'function',
-        name: name,
-        content: `Command executed and DOM updated with small changes.
-First is a git diff format of the small changes on the page, this may indicate something like a dropdown selection, popup, or alert. Your previous likely yielded these changes.
+`;
+      } else if (differencePercentage < 25 && (changedLines < 100 || differencePercentage < 5)) {
+        functionContent = `Command executed and the DOM updated with small changes.
+First is a git diff format of the small changes on the page, which may indicate something like a dropdown selection, popup, or alert. Your previous action likely yielded these changes.
 Git Diff:
 ${diffText}
 
 The current DOM content is:
 ${newProcessedDom}
-`,
-      });
-    }
-    else {
-      // Include the updated DOM in the function response without annotation
+`;
+      } else {
+        functionContent = `Command executed and the DOM updated.
+The current DOM content is:
+${newProcessedDom}
+`;
+      }
+
       messages.push({
         role: 'function',
         name: name,
-        content: `Command executed and DOM updated.
-The current DOM content is:
-${newProcessedDom}
-`,
+        content: functionContent,
       });
+
+      // Update processedDom and domRepresentation for the next iteration
+      processedDom = newProcessedDom;
+      domRepresentation = newDomRepresentation;
+
+      printDebugInfo(messages);
+
+      // Proceed to reflection
+      return await processAssistantResponse(
+        messages,
+        client,
+        processedDom,
+        domRepresentation,
+        'reflect'
+      );
+    } else {
+      // Assistant didn't call any function during execute
+      console.log('Assistant did not perform any actions during the EXECUTE step.');
+      return { processedDom, domRepresentation };
     }
+  } else if (step === 'reflect') {
+    printDebugInfo(messages);
 
-    // Update processedDom and domRepresentation for the next iteration
-    processedDom = newProcessedDom;
-    domRepresentation = newDomRepresentation;
+    // Determine if the assistant wants to adjust the plan or proceed
+    const reflection = aiMessage.content.toLowerCase();
+    const needsAdjustment = reflection.includes('adjust') || reflection.includes('need to') || reflection.includes('next steps');
 
-    // Recursive call to process assistant's response
-    return await processAssistantResponse(
-      messages,
-      client,
-      processedDom,
-      domRepresentation
-    );
-  } else {
-    // Assistant provided a response
-    console.log('Assistant:', aiMessage.content);
-    return { processedDom, domRepresentation };
-  }
-}
-
-// Function to execute assistant's function call
-async function executeAssistantFunction(name, argsObj, client) {
-  if (name === 'click_element') {
-    await executeCommand(client, { type: 'click', ...argsObj });
-  } else if (name === 'enter_text') {
-    await executeCommand(client, { type: 'input', ...argsObj });
-  } else if (name === 'goto_url') {
-    await executeCommand(client, { type: 'goto', ...argsObj });
-  } else if (name === 'select_option') {
-    await executeCommand(client, { type: 'select', ...argsObj });
-  }
-}
-
-// Function to redact old DOM contents from previous messages
-function redactOldDomContents(messages) {
-  // Keep the latest function response with DOM content, redact others
-  let foundLatestDom = false;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (
-      (msg.role === 'function' || msg.role === 'system') &&
-      msg.content &&
-      msg.content.includes('The current DOM content is:')
-    ) {
-      if (!foundLatestDom) {
-        // This is the latest message with DOM content, keep it
-        foundLatestDom = true;
-      } else {
-        // Redact DOM content from this message
-        const splitContent = msg.content.split('The current DOM content is:');
-        if (splitContent.length > 1) {
-          msg.content = `Command executed and DOM updated: [DOM content redacted]`;
-        }
-      }
+    if (needsAdjustment) {
+      // Assistant needs to adjust the plan
+      return await processAssistantResponse(
+        messages,
+        client,
+        processedDom,
+        domRepresentation,
+        'plan'
+      );
+    } else {
+      // Task completed or proceed to execute again
+      // Decide whether to stop or continue; for now, we'll proceed to execution
+      return await processAssistantResponse(
+        messages,
+        client,
+        processedDom,
+        domRepresentation,
+        'execute'
+      );
     }
   }
 }
 
-// Function to initialize the system prompt with the initial DOM
-export function initializeSystemPrompt(processedDom) {
-  const systemPrompt = `You are an AI assistant interacting with web pages.
-
-**Capabilities:**
-- Click elements.
-- Enter text into inputs.
-- Navigate to URLs.
-
-**Guidelines:**
-- **Avoid repeating actions** on the same element unless necessary due to a change in the page state.
-- Be aware that some elements (like dropdowns or popups) may require follow-up actions.
-- If an action doesn't yield the expected result, try a different approach without excessive repetition.
-- Keep track of your actions to prevent getting stuck or looping over the same steps.
-- Aim to accomplish tasks efficiently and effectively.
-
-**Objective:**
-Assist the user in navigating and interacting with web pages by following these guidelines.
-`;
-  // Return the system message
-  return { role: 'system', content: systemPrompt };
+async function printDebugInfo(messages) {
+  let function_messages = messages.filter(m => m.role === 'function');
+  fs.writeFileSync('dom_content.txt', function_messages[function_messages.length - 1]?.content || '');
+  fs.writeFileSync('messages.json', JSON.stringify(messages, null, 2));
 }

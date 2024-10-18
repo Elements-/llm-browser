@@ -1,3 +1,17 @@
+import { executeCommand } from '../browser/browser.js';
+
+export async function executeAssistantFunction(name, argsObj, client) {
+  if (name === 'click_element') {
+    await executeCommand(client, { type: 'click', ...argsObj });
+  } else if (name === 'enter_text') {
+    await executeCommand(client, { type: 'input', ...argsObj });
+  } else if (name === 'goto_url') {
+    await executeCommand(client, { type: 'goto', ...argsObj });
+  } else if (name === 'select_option') {
+    await executeCommand(client, { type: 'select', ...argsObj });
+  }
+}
+
 export const assistantFunctions = [
     {
       name: 'click_element',
@@ -9,12 +23,12 @@ export const assistantFunctions = [
             type: 'integer',
             description: 'The backendNodeId of the element to click',
           },
-          description: {
+          explanation: {
             type: 'string',
-            description: 'A brief description of the element being clicked',
+            description: 'Reasoning for the action, what it is interacting with, and why',
           },
         },
-        required: ['backendNodeId', 'description'],
+        required: ['backendNodeId', 'explanation'],
       },
     },
     {
@@ -31,12 +45,12 @@ export const assistantFunctions = [
             type: 'string',
             description: 'The text to enter',
           },
-          description: {
+          explanation: {
             type: 'string',
-            description: 'A brief description of the input element',
+            description: 'Reasoning for the action, what it is interacting with, and why',
           },
         },
-        required: ['backendNodeId', 'text', 'description'],
+        required: ['backendNodeId', 'text', 'explanation'],
       },
     },
     {
@@ -67,12 +81,12 @@ export const assistantFunctions = [
             type: 'string',
             description: 'The value attribute of the option to select',
           },
-          description: {
+          explanation: {
             type: 'string',
-            description: 'A brief description of the select element',
+            description: 'Reasoning for the action, what it is interacting with, and why',
           },
         },
-        required: ['backendNodeId', 'value', 'description'],
+        required: ['backendNodeId', 'value', 'explanation'],
       },
     },
   ];

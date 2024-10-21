@@ -12,10 +12,11 @@ export async function extractDOM(client) {
 
   // Capture the snapshot
   const { documents, strings } = await DOMSnapshot.captureSnapshot({
-    computedStyles: ['display', 'visibility', 'opacity', 'cursor'],
+    computedStyles: ['display', 'visibility', 'opacity', 'cursor', 'content'],
     includeDOMRects: true, // Necessary to get layout information
     includeTextValue: true,
     includeInputTextValue: true,
+    includePseudoElements: true,
   });
 
   const domData = processSnapshot(documents, strings);

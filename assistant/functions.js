@@ -9,6 +9,9 @@ export async function executeAssistantFunction(name, argsObj, client) {
     await executeCommand(client, { type: 'goto', ...argsObj });
   } else if (name === 'select_option') {
     await executeCommand(client, { type: 'select', ...argsObj });
+  } else if (name === 'return_result') {
+    // Function to signal task completion and return data
+    return argsObj;
   }
 }
 
@@ -87,6 +90,28 @@ export const assistantFunctions = [
           },
         },
         required: ['backendNodeId', 'value', 'explanation'],
+      },
+    },
+    {
+      name: 'return_result',
+      description: 'Signal task completion and return the result to the supervisor',
+      parameters: {
+        type: 'object',
+        properties: {
+          success: {
+            type: 'boolean',
+            description: 'Indicates if the task was successful',
+          },
+          message: {
+            type: 'string',
+            description: 'A message describing the task outcome',
+          },
+          data: {
+            type: 'object',
+            description: 'Additional data or results from the task',
+          },
+        },
+        required: ['success', 'message'],
       },
     },
   ];

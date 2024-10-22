@@ -10,6 +10,31 @@ export async function launchBrowser(url) {
     userDataDir: './chrome-profile',
   });
 
+  // Cleanup function to kill Chrome
+  const cleanup = () => {
+    if (chrome && chrome.kill) {
+      chrome.kill()?.catch((err) => {
+        console.error('Error killing Chrome:', err);
+      });
+    }
+  };
+
+  // Register cleanup on process exit
+  process.on('exit', cleanup);
+  process.on('SIGINT', () => {
+    cleanup();
+    process.exit();
+  });
+  process.on('SIGTERM', () => {
+    cleanup();
+    process.exit();
+  });
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    cleanup();
+    process.exit(1);
+  });
+
   try {
     // Connect to the Chrome DevTools Protocol on the same port
     const client = await CDP({ port: chrome.port });
@@ -29,6 +54,7 @@ export async function launchBrowser(url) {
     return { chrome, client };
   } catch (err) {
     console.error('Error during processing:', err);
+    cleanup();
     throw err;
   }
 }

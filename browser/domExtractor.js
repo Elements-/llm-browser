@@ -2,10 +2,17 @@ import { waitForDOMStable } from '../utils/waitForDom.js';
 
 // Function to get the entire DOM tree and start processing
 export async function extractDOM(client) {
-  const { DOMSnapshot } = client;
+  const { DOMSnapshot, Runtime } = client;
 
   // Wait for the DOM to be stable
   await waitForDOMStable(client);
+
+  // Get the current URL
+  const { result } = await Runtime.evaluate({
+    expression: 'window.location.href',
+    returnByValue: true,
+  });
+  const currentURL = result.value;
 
   // Enable DOMSnapshot
   await DOMSnapshot.enable();
@@ -21,7 +28,8 @@ export async function extractDOM(client) {
 
   const domData = processSnapshot(documents, strings);
 
-  return domData;
+  // Return both DOM data and current URL
+  return { domData, currentURL };
 }
 
 function processSnapshot(documents, strings) {
@@ -276,11 +284,7 @@ function buildNodeData(
   }
 
   // Determine if the element is interactable
-
-  if (nodeName === 'th' && attributes['data-priority'] === '3' && attributes['class'] === 'sorting' && attributes['tabindex'] === '0' && attributes['aria-controls'] === 'tableInvoicesList' && attributes['aria-label'] === 'Invoice Date: activate to sort column ascending') {
-    console.log(nodeName, stylesForNode);
-  }
-  const isInteractable = computeInteractable(nodeName, stylesForNode);
+  const isInteractable = computeInteractable(nodeName, stylesForNode, attributes);
   if (isInteractable) {
     nodeData.interactable = true;
   }
@@ -453,7 +457,8 @@ function computeVisibility(
   return true;
 }
 
-function computeInteractable(nodeName, stylesForNode) {
+// Updated computeInteractable function
+function computeInteractable(nodeName, stylesForNode, attributes) {
   const interactableTags = [
     'a',
     'button',
@@ -466,5 +471,33 @@ function computeInteractable(nodeName, stylesForNode) {
   const hasPointerCursor = stylesForNode['cursor'] === 'pointer';
   const isInteractableTag = interactableTags.includes(nodeName);
 
-  return isInteractableTag || hasPointerCursor;
+  // List of roles that make an element interactable
+  const interactableRoles = [
+    'button',
+    'link',
+    'menuitem',
+    'menuitemcheckbox',
+    'menuitemradio',
+    'option',
+    'radio',
+    'tab',
+    'treeitem',
+  ];
+
+  // Check if the element has a role that makes it interactable
+  const role = attributes.role;
+  const hasInteractableRole = role && interactableRoles.includes(role);
+
+  // Check if the element has any of the specified aria attributes
+  const hasInteractableAriaAttribute =
+    'aria-selected' in attributes ||
+    'aria-pressed' in attributes ||
+    'aria-expanded' in attributes;
+
+  return (
+    isInteractableTag ||
+    hasPointerCursor ||
+    hasInteractableRole ||
+    hasInteractableAriaAttribute
+  );
 }

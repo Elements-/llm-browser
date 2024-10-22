@@ -4,7 +4,7 @@ export function setupCLI(onInput, onClose) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: '',
+    prompt: 'ENTER PROMPT:',
   });
 
   rl.prompt();

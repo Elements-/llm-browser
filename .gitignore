@@ -4,3 +4,5 @@ node_modules
 messages.json
 dom_content.txt
 chrome-profile/**
+logs.txt
+messages.json.txt

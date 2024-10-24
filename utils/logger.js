@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 export function logMessages(messages) {
-  fs.writeFileSync('messages.json', JSON.stringify(messages, null, 2));
+  fs.writeFileSync('./debug/messages.json', JSON.stringify(messages, null, 2));
 
   // Process messages to format 'content' field
   const processedMessages = messages.map((message) => {
@@ -22,5 +22,5 @@ export function logMessages(messages) {
   // Replace escaped newline characters in the JSON string with actual newlines
   jsonString = jsonString.replace(/\\n/g, '\n');
 
-  fs.writeFileSync('messages.json.txt', jsonString);
+  fs.writeFileSync('./debug/messages.json.txt', jsonString);
 }

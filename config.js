@@ -74,7 +74,7 @@ Carefully analyze based on the DOM tree if the previous action was successful. I
 Generate an end-to-end plan required to complete the task. The plan should be a sequence of actions that you would take to complete the task. Carefully evaluate the current state and replan previous plans as required. Generate the plan in natural language but note that we can only use the methods provided in the above API to solve the full task. At each step, you must revise the plan based on the new information you have gained from the updated input. Do not preserve the old plan. Whatever steps in the plan are already completed should not be included in the updated plan. 
 
 (Notes)
-Record any important data in a "Notes" section to assist in future steps. Links, ids, names etc that will be needed in future steps can be saved here. Copy over the notes from previous steps if you want to keep them.
+Record any important data in a "Notes" section to assist in future steps. Links, ids, names etc that will be needed in future steps can be saved here. It can be helpful to save lists of information to prevent re-scraping the same data. Copy over the notes from previous steps if you want to keep them.
 
 (Next Action)
 Based on the current DOM tree and the history of your previous interaction with the UI, and the plan you generated, decide on the next action in natural language. 
@@ -86,8 +86,8 @@ Note: If you believe the task is complete, you can call the complete_task functi
 }
 
 
-export const generateUpdatePrompt = ({ reflection, currentURL, processedDom }) => {
-  return 'You can use the following reflection feedback to guide your next action: ' + reflection + '\nThe current URL is: ' + currentURL + '\nThe current DOM tree is:\n' + processedDom
+export const generateUpdatePrompt = ({ reflection, currentURL, domTree }) => {
+  return 'You can use the following reflection feedback to guide your next action: ' + reflection + '\nThe current URL is: ' + currentURL + '\nThe current DOM tree is:\n' + domTree
 }
 
 

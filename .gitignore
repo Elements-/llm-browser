@@ -7,3 +7,5 @@ chrome-profile/**
 logs.txt
 messages.json.txt
 a11y.txt
+nodes.json
+debug/**

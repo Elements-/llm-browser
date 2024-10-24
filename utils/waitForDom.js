@@ -41,7 +41,6 @@ export async function waitForDOMStable(client, stableTime = 500, networkIdleTime
 
   while (true) {
     if (Date.now() - startTime > maxWaitTime) {
-      console.warn('Timed out waiting for DOM to be stable and network to be idle');
       break;
     }
 

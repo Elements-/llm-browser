@@ -7,13 +7,12 @@ const startingUrl = 'https://google.com';
 
 let client;
 let chromeInstance;
-let processedDom;
-let domRepresentation;
+let domTree;
 let messages = [];
 let isProcessing = false;
 
 (async () => {
-  // Initialize browser and get initial DOM
+  // Initialize browser
   const { client: cdpClient, chrome } = await launchBrowser(startingUrl);
   client = cdpClient;
   chromeInstance = chrome;
@@ -38,9 +37,8 @@ let isProcessing = false;
       }
 
       try {
-        const response = await processAssistantResponse(input, messages, client, processedDom, domRepresentation);
-        processedDom = response.processedDom;
-        domRepresentation = response.domRepresentation;
+        const response = await processAssistantResponse(input, messages, client, domTree);
+        domTree = response.domTree;
       } catch (error) {
         console.error('Error:', error);
       } finally {

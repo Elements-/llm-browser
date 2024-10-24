@@ -1,7 +1,6 @@
 import { openaiClient } from '../api/openaiClient.js';
 import { executeAssistantFunction } from './functions.js';
 import { extractDOM } from '../browser/domExtractor.js';
-import { processDom } from '../browser/domProcessor.js';
 import { logMessages } from '../utils/logger.js';
 import {
   generateUpdatePrompt,
@@ -10,7 +9,9 @@ import {
 } from '../config.js';
 
 // Function to process assistant's response
-export async function processAssistantResponse(input, messages, client, processedDom, domRepresentation) {
+export async function processAssistantResponse(input, messages, client, domTree) {
+  console.log('\n' + ('='.repeat(20)) + '\n')
+
   const response = await openaiClient.chat.completions.create({
     model: openaiConfig.model,
     messages: messages,
@@ -21,10 +22,8 @@ export async function processAssistantResponse(input, messages, client, processe
   const aiMessage = response.choices[0].message;
   messages.push(aiMessage);
 
-  console.log(aiMessage.content)
-
-  // Log context size and messages after receiving response
   console.log(`Prompt tokens: ${response.usage.prompt_tokens}`);
+  console.log('MODEL RESPONSE\n' + aiMessage.content)
 
   let function_call
 
@@ -50,26 +49,20 @@ export async function processAssistantResponse(input, messages, client, processe
       argsObj = JSON.parse(args);
     } catch (err) {
       console.error('Error parsing function arguments:', err);
-      return { processedDom, domRepresentation };
+      return { domTree };
     }
 
     // If the assistant called 'complete_task', end the flow
     if (name === 'complete_task') {
-      return { processedDom, domRepresentation };
+      return { domTree };
     }
 
     // Execute the function
     await executeAssistantFunction(name, argsObj, client);
 
     // After executing the function, re-extract and process the DOM
-    const { domData: newDomRepresentation, currentURL } = await extractDOM(client);
-
-    // Process the new DOM representation into text
-    const newProcessedDom = processDom(newDomRepresentation);
-
-    // Update processedDom and domRepresentation for the next iteration
-    processedDom = newProcessedDom;
-    domRepresentation = newDomRepresentation;
+    const { domTree: newDomTree, currentURL } = await extractDOM(client);
+    domTree = newDomTree;
 
     if(messages.length > 2) {
       let potentialSystemPrompt = messages[messages.length - 2].content;
@@ -82,14 +75,14 @@ export async function processAssistantResponse(input, messages, client, processe
 
     messages.push({
       role: 'system',
-      content: generateUpdatePrompt({ reflection, currentURL, processedDom })
+      content: generateUpdatePrompt({ reflection, currentURL, domTree })
     });
 
     logMessages(messages);
 
-    return processAssistantResponse(input, messages, client, processedDom, domRepresentation);
+    return processAssistantResponse(input, messages, client, domTree);
   }
-  return { processedDom, domRepresentation };
+  return { domTree };
 }
 
 const doReflection = async (input, messages) => {
@@ -104,5 +97,8 @@ const doReflection = async (input, messages) => {
     frequency_penalty: openaiConfig.frequency_penalty,
   });
   
+  console.log(`Reflection Prompt tokens: ${response.usage.prompt_tokens}`)
+  console.log('REFLECTION RESPONSE\n' + response.choices[0].message.content)
+
   return response.choices[0].message.content
 }

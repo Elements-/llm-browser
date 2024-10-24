@@ -1,10 +1,9 @@
 import { executeCommand } from '../browser/browser.js';
-import { assistantFunctions } from '../config.js'; // Import assistantFunctions
 
 export async function executeAssistantFunction(name, argsObj, client) {
   if (name === 'click_element') {
     await executeCommand(client, { type: 'click', ...argsObj });
-  } else if (name === 'enter_text') {
+  } else if (name === 'input_text') {
     await executeCommand(client, { type: 'input', ...argsObj });
   } else if (name === 'goto_url') {
     await executeCommand(client, { type: 'goto', ...argsObj });

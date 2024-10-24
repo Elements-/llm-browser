@@ -1,4 +1,4 @@
-import { systemPrompt } from './config.js';
+import { generateSystemPrompt } from './config.js';
 import { setupCLI } from './cli/interface.js';
 import { launchBrowser } from './browser/browser.js';
 import { processAssistantResponse } from './assistant/assistant.js';
@@ -17,12 +17,7 @@ let isProcessing = false;
   const { client: cdpClient, chrome } = await launchBrowser(startingUrl);
   client = cdpClient;
   chromeInstance = chrome;
-
-  // Initialize system prompt
-  messages.unshift({
-    role: 'system',
-    content: systemPrompt,
-  });
+  
 
   // Start interaction
   setupCLI(
@@ -34,9 +29,16 @@ let isProcessing = false;
       }
 
       isProcessing = true;
-      messages.push({ role: 'user', content: input });
+
+      if(messages.length === 0) {
+        messages.push({ role: 'system', content: generateSystemPrompt({ task: input }) });
+      }
+      else {
+        messages.push({ role: 'user', content: input });
+      }
+
       try {
-        const response = await processAssistantResponse(messages, client, processedDom, domRepresentation);
+        const response = await processAssistantResponse(input, messages, client, processedDom, domRepresentation);
         processedDom = response.processedDom;
         domRepresentation = response.domRepresentation;
       } catch (error) {

@@ -40,13 +40,14 @@ export async function launchBrowser(url) {
     const client = await CDP({ port: chrome.port });
 
     // Extract domains we need
-    const { Network, Page, DOM, CSS } = client;
+    const { Network, Page, DOM, CSS, Accessibility } = client;
 
     // Enable events on domains we are interested in
     await Network.enable();
     await Page.enable();
     await DOM.enable();
     await CSS.enable();
+    await Accessibility.enable();
 
     // Wait for the page to load
     //await Page.loadEventFired();

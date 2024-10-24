@@ -8,176 +8,101 @@ export const openaiConfig = {
     frequency_penalty: 1,
 };
 
-// System Prompt
-export const systemPrompt = `You are an AI assistant interacting with web pages.
 
-**Capabilities:**
-- Click elements.
-- Enter text into inputs.
-- Navigate to URLs.
-- Select options from dropdowns.
+export const generateSystemPrompt = ({ task }) => {
+  return `You are an expert assistant that can navigate and interact with web pages. Your task is to complete the following: ${task}
 
-**Guidelines:**
-- **Avoid repeating actions** on the same element unless necessary due to a change in the page state.
-- Be aware that some elements (like dropdowns or popups) may require follow-up actions.
-- If an action doesn't yield the expected result, adjust your plan accordingly without excessive repetition.
-- Keep track of your actions to prevent getting stuck or looping over the same steps.
+You are provided with:
+1. A simplified representation of the brower DOM tree.
+2. The history of your actions and the results of those actions with the browser.
+3. Access to the following function capabilities to interact with the browser.
+Here is a list of functions in JSON format that you can invoke:
 
-**Three-Step Process:**
-1. **Plan:** Before performing any actions, outline the steps needed to accomplish the task. *Do not execute any actions in this step.*
-2. **Execute:** Carry out the planned actions step-by-step.
-3. **Reflect:** After execution, verify if the task was completed successfully and note any issues. Adjust the plan if necessary. *Do not execute any actions in this step.*
+goto_url: Navigate to a website by URL
+Example Call:
+   { 
+     name: "goto_url", 
+     parameters: { 
+       url: "https://example.com" 
+     } 
+   }
 
-**Instructions:**
-- Prefix each response with the current step (e.g., "**Plan:**", "**Execute:**", "**Reflect:**").
-- After providing the plan, proceed to execution without waiting for user confirmation.
-- **Do not perform any actions during the Plan or Reflect steps.**
-- After reflection, decide if further actions are needed and adjust accordingly.
+select_option: Select an option from a dropdown
+Example Call:
+   { 
+     name: "select_option", 
+     parameters: { 
+       backendNodeId: 123, 
+       value: "OptionValue"
+     } 
+   }
 
-**Objective:**
-Assist the user in navigating and interacting with web pages by following these guidelines and the three-step process.`;
+click_element: Click on an element
+Example Call:
+   { 
+     name: "click_element", 
+     parameters: { 
+       backendNodeId: 456
+     } 
+   }
 
-// Assistant Prompts
-export const assistantPrompts = {
-  plan: "Please provide a detailed plan to accomplish the user's instruction.",
-  execute: 'Proceed to execute the planned actions step-by-step.',
-  reflect: 'Reflect on the executed actions and determine if adjustments are needed.',
-};
+input_text: Type text into an element
+Example Call:
+   { 
+     name: "input_text", 
+     parameters: { 
+       backendNodeId: 789, 
+       text: "Sample input text."
+     } 
+   }
 
-export function generateSummary(actionResponse, reflectResponse, url) {
-    return `Previous steps have been summarized for brevity.
+complete_task: Signal that the task is complete
+Example Call:
+   { 
+     name: "complete_task", 
+     parameters: { 
+       result: "Task completed successfully." 
+     } 
+   }
 
-**Current URL:** ${url}
 
-**Function Call:**
-\`\`\`json
-${JSON.stringify(actionResponse.function_call, null, 2)}
-\`\`\`
+Your reponse should be formatted like this:
+(Previous action verification)
+Carefully analyze based on the DOM tree if the previous action was successful. If the previous action was not successful, provide a reason for the failure.
 
-The function call yielded the following reflection:
+(End-to-end Planning)
+Generate an end-to-end plan required to complete the task. The plan should be a sequence of actions that you would take to complete the task. Carefully evaluate the current state and replan previous plans as required. Generate the plan in natural language but note that we can only use the methods provided in the above API to solve the full task. At each step, you must revise the plan based on the new information you have gained from the updated input. Do not preserve the old plan. Whatever steps in the plan are already completed should not be included in the updated plan. 
 
-${reflectResponse.content}`
+(Notes)
+Record any important data in a "Notes" section to assist in future steps. Links, ids, names etc that will be needed in future steps can be saved here. Copy over the notes from previous steps if you want to keep them.
+
+(Next Action)
+Based on the current DOM tree and the history of your previous interaction with the UI, and the plan you generated, decide on the next action in natural language. 
+
+(Function Call)
+Translate the next action into a JSON function call.
+
+Note: If you believe the task is complete, you can call the complete_task function and end the session.`;
 }
 
-// Function Content Generators
-export function generateFunctionContentZeroDifference(currentURL, newProcessedDom) {
-  return `Command executed but the DOM had NO CHANGES.
-The current URL is: ${currentURL}
-The current DOM content is:
-${newProcessedDom}
-`;
+
+export const generateUpdatePrompt = ({ reflection, currentURL, processedDom }) => {
+  return 'You can use the following reflection feedback to guide your next action: ' + reflection + '\nThe current URL is: ' + currentURL + '\nThe current DOM tree is:\n' + processedDom
 }
 
-export function generateFunctionContentSmallDifference(currentURL, diffText, newProcessedDom) {
-  return `Command executed and the DOM updated with small changes.
-The current URL is: ${currentURL}
-First is a git diff format of the small changes on the page, which may indicate something like a dropdown selection, popup, or alert. Your previous action likely yielded these changes.
-Git Diff:
-${diffText}
 
-The current DOM content is:
-${newProcessedDom}
-`;
+export const generateReflectionPrompt = ({ input, messages }) => {
+  return `You are a reflection agent designed to assist in task execution by analyzing a trajectory of task execution until this time step and providing feedback for the next step prediction. 
+    You have access to the Task Description and Current Trajectory. 
+    - You should only provide informative reflection feedback when you find the trajectory is abnormal (e.g., contain consecutive repeated failed actions).
+    - Make sure to avoid providing any information about specific planning or actions.
+    - Assume the action / tool calls are correct, do not judge them.
+    - DO NOT comment on upcoming actions, only provide feedback on the past trajectory and any abnormalities.
+    - DO NOT comment on clicking links vs using the GOTO url tool, both are correct.
+    
+    Task Description: ${input}
+
+    Current Trajectory:
+    ${JSON.stringify(messages, 0, 2)}
+    `
 }
-
-export function generateFunctionContentUpdatedDOM(currentURL, newProcessedDom) {
-  return `Command executed and the DOM updated.
-The current URL is: ${currentURL}
-The current DOM content is:
-${newProcessedDom}
-`;
-}
-
-// Assistant Function Definitions
-export const assistantFunctions = [
-  {
-    name: 'click_element',
-    description: 'Click on an element by backendNodeId',
-    parameters: {
-      type: 'object',
-      properties: {
-        backendNodeId: {
-          type: 'integer',
-          description: 'The backendNodeId of the element to click',
-        },
-        explanation: {
-          type: 'string',
-          description: 'Reasoning for the action, what it is interacting with, and why',
-        },
-      },
-      required: ['backendNodeId', 'explanation'],
-    },
-  },
-  {
-    name: 'enter_text',
-    description: 'Enter text into an input element by backendNodeId',
-    parameters: {
-      type: 'object',
-      properties: {
-        backendNodeId: {
-          type: 'integer',
-          description: 'The backendNodeId of the input element',
-        },
-        text: {
-          type: 'string',
-          description: 'The text to enter',
-        },
-        explanation: {
-          type: 'string',
-          description: 'Reasoning for the action, what it is interacting with, and why',
-        },
-      },
-      required: ['backendNodeId', 'text', 'explanation'],
-    },
-  },
-  {
-    name: 'goto_url',
-    description: 'Navigate to a website by URL',
-    parameters: {
-      type: 'object',
-      properties: {
-        url: {
-          type: 'string',
-          description: 'The URL to navigate to',
-        },
-      },
-      required: ['url'],
-    },
-  },
-  {
-    name: 'select_option',
-    description: 'Select an option from a dropdown by backendNodeId',
-    parameters: {
-      type: 'object',
-      properties: {
-        backendNodeId: {
-          type: 'integer',
-          description: 'The backendNodeId of the select element',
-        },
-        value: {
-          type: 'string',
-          description: 'The value attribute of the option to select',
-        },
-        explanation: {
-          type: 'string',
-          description: 'Reasoning for the action, what it is interacting with, and why',
-        },
-      },
-      required: ['backendNodeId', 'value', 'explanation'],
-    },
-  },
-  {
-    name: 'complete_task',
-    description: 'Signals that the assistant has completed the task and provides the final result.',
-    parameters: {
-      type: 'object',
-      properties: {
-        result: {
-          type: 'string',
-          description: 'The final result or message after task completion.',
-        },
-      },
-      required: ['result'],
-    },
-  },
-];

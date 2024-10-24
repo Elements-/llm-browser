@@ -1,11 +1,52 @@
 import { waitForDOMStable } from '../utils/waitForDom.js';
+import fs from 'fs';
 
 // Function to get the entire DOM tree and start processing
 export async function extractDOM(client) {
-  const { DOMSnapshot, Runtime } = client;
+  const { DOMSnapshot, Runtime, Accessibility } = client;
 
   // Wait for the DOM to be stable
   await waitForDOMStable(client);
+
+
+  /*
+  // DEV: A11Y TREE TESTING
+  const { nodes } = await Accessibility.getFullAXTree();
+
+  // Build a map from nodeId to node for quick lookup
+  const nodeMap = new Map();
+  for (const node of nodes) {
+    nodeMap.set(node.nodeId, node);
+  }
+
+  // Link each node with its children
+  for (const node of nodes) {
+    if (node.childIds) {
+      node.children = node.childIds.map(childId => nodeMap.get(childId)).filter(Boolean);
+    } else {
+      node.children = [];
+    }
+  }
+
+  // Find root nodes (nodes without a parentId)
+  const rootNodes = nodes.filter(node => !node.parentId);
+
+  function buildAXTreeString(node, depth = 0) {
+    const role = (node.role && node.role.value) || '';
+    const name = (node.name && node.name.value) || '';
+    let treeString = `${'  '.repeat(depth)}${role}: ${name}\n`;
+    if (node.children && node.children.length > 0) {
+      for (const child of node.children) {
+        treeString += buildAXTreeString(child, depth + 1);
+      }
+    }
+    return treeString;
+  }
+
+  const axTreeString = rootNodes.map(node => buildAXTreeString(node)).join('');
+  fs.writeFileSync('a11y.txt', axTreeString);
+  */
+
 
   // Get the current URL
   const { result } = await Runtime.evaluate({

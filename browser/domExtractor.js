@@ -53,6 +53,10 @@ function buildAXTreeString(node, depth = 0) {
   let properties = '';
   let focusable = false;
 
+  if(role === 'image') {
+    return;
+  }
+
   if (node.ignored || !backendNodeId) {
     // Skip this node but include its children at the same depth
     let treeString = '';

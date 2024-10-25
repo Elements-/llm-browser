@@ -1,25 +1,25 @@
 import { launch } from 'chrome-launcher';
 import CDP from 'chrome-remote-interface';
 
-// Function to launch the browser and extract the DOM
 export async function launchBrowser(url) {
   // Launch Chrome with remote debugging and starting URL
   const chrome = await launch({
     startingUrl: url,
-    chromeFlags: ['--no-first-run'],
+    chromeFlags: [
+      '--no-first-run',
+      '--disable-popup-blocking',
+    ],
     userDataDir: './chrome-profile',
   });
 
-  // Cleanup function to kill Chrome
+  // Define a cleanup function to kill Chrome on exit
   const cleanup = () => {
     if (chrome && chrome.kill) {
-      chrome.kill()?.catch((err) => {
-        console.error('Error killing Chrome:', err);
-      });
+      chrome.kill()
     }
   };
 
-  // Register cleanup on process exit
+  // Register cleanup on various process exit events
   process.on('exit', cleanup);
   process.on('SIGINT', () => {
     cleanup();
@@ -39,18 +39,28 @@ export async function launchBrowser(url) {
     // Connect to the Chrome DevTools Protocol on the same port
     const client = await CDP({ port: chrome.port });
 
-    // Extract domains we need
-    const { Network, Page, DOM, CSS, Accessibility } = client;
+    // Destructure necessary domains from the client
+    const { Network, Page, Runtime, Target } = client;
 
-    // Enable events on domains we are interested in
+    // Enable necessary domains
     await Network.enable();
     await Page.enable();
-    await DOM.enable();
-    await CSS.enable();
-    await Accessibility.enable();
 
-    // Wait for the page to load
-    //await Page.loadEventFired();
+    // **Enable the Target domain to monitor target events**
+    await Target.setDiscoverTargets({ discover: true });
+
+    // **Listen for new target creations and close them immediately**
+    Target.targetCreated(async ({ targetInfo }) => {
+      if (targetInfo.type === 'page' && targetInfo.openerId) {
+        await Target.closeTarget({ targetId: targetInfo.targetId });
+      }
+    });
+
+    // Intercept window.open calls and links with target="_blank"
+    Page.windowOpen(async ({ url }) => {
+      await Page.navigate({ url });
+      await Page.loadEventFired();
+    });
 
     return { chrome, client };
   } catch (err) {
@@ -60,7 +70,6 @@ export async function launchBrowser(url) {
   }
 }
 
-// Function to execute a command (click, input, navigate)
 export async function executeCommand(client, command) {
   if (command.type === 'click') {
     const { execute } = await import('./commands/click.js');

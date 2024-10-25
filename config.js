@@ -5,7 +5,7 @@ dotenv.config();
 export const openaiConfig = {
     model: 'gpt-4o',
     temperature: 0,
-    frequency_penalty: 1,
+    frequency_penalty: 0.7,
 };
 
 
@@ -80,29 +80,53 @@ Record any important data in a "Notes" section to assist in future steps. Links,
 Based on the current DOM tree and the history of your previous interaction with the UI, and the plan you generated, decide on the next action in natural language. 
 
 (Function Call)
-Translate the next action into a JSON function call.
+Translate the next action into a JSON function call. MUST BE VALID JSON, no comments or abbreviations.
 
 Note: If you believe the task is complete, you can call the complete_task function and end the session.`;
 }
 
 
-export const generateUpdatePrompt = ({ reflection, currentURL, domTree }) => {
-  return 'You can use the following reflection feedback to guide your next action: ' + reflection + '\nThe current URL is: ' + currentURL + '\nThe current DOM tree is:\n' + domTree
+export const generateInjectedReflectionPrompt = ({ reflection }) => {
+  return 'You can use the following reflection feedback to guide your next action: ' + reflection
+}
+
+export const generateInjectedFinalReflectionPrompt = ({ finalReflection }) => {
+  return 'The supervisor rejected your response, see their feedback: ' + finalReflection
+}
+
+export const generateUpdatePrompt = ({ currentURL, domTree }) => {
+  return 'The current URL is: ' + currentURL + '\nThe current DOM tree is:\n' + domTree
 }
 
 
 export const generateReflectionPrompt = ({ input, messages }) => {
-  return `You are a reflection agent designed to assist in task execution by analyzing a trajectory of task execution until this time step and providing feedback for the next step prediction. 
-    You have access to the Task Description and Current Trajectory. 
-    - You should only provide informative reflection feedback when you find the trajectory is abnormal (e.g., contain consecutive repeated failed actions).
-    - Make sure to avoid providing any information about specific planning or actions.
-    - Assume the action / tool calls are correct, do not judge them.
-    - DO NOT comment on upcoming actions, only provide feedback on the past trajectory and any abnormalities.
-    - DO NOT comment on clicking links vs using the GOTO url tool, both are correct.
-    
-    Task Description: ${input}
+  return `You are a reflection agent designed to assist in task execution by analyzing a trajectory of task execution until this time step and providing feedback for the next step prediction. You have access to the Task Description and Current Trajectory.
 
-    Current Trajectory:
-    ${JSON.stringify(messages, 0, 2)}
-    `
+- You should only provide informative reflection feedback when you find the trajectory is abnormal (e.g., contain consecutive repeated failed actions). If the trajectory is normal, respond concisely with "Trajectory is normal".
+- You should only provide feedback on the latest action in the trajectory.
+- Make sure to avoid providing any information about specific planning or actions.
+- Assume the action / tool calls are correct, do not judge them.
+- DO NOT comment on upcoming actions, only provide feedback on the past trajectory and any abnormalities.
+- DO NOT comment on clicking links vs using the GOTO url tool, both are correct.
+    
+Task Description: ${input}
+
+Current Trajectory:
+${JSON.stringify(messages, 0, 2)}`
+}
+
+export const generateFinalReflectionPrompt = ({ input, messages }) => {
+  return `You are a reflection agent designed to assist in task execution by analyzing a trajectory of task execution to its completion and provide feedback if the task was completed successfully. You have access to the Task Description, Trajectory, and Conclusion. 
+
+Task Description: ${input}
+
+Trajectory to Conclusion:
+${JSON.stringify(messages, 0, 2)}
+
+Your reponse should be formatted like this:
+(Task Completion Verification)
+SUCCESS or FAILURE
+
+(Feedback)
+Provide feedback on what is incorrect or what went wrong in the case of a FAILURE. BLANK if SUCCESS.`
 }

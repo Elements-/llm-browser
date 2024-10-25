@@ -5,7 +5,10 @@ import { logMessages } from '../utils/logger.js';
 import {
   generateUpdatePrompt,
   generateReflectionPrompt,
-  openaiConfig
+  openaiConfig,
+  generateInjectedReflectionPrompt,
+  generateFinalReflectionPrompt,
+  generateInjectedFinalReflectionPrompt,
 } from '../config.js';
 
 // Function to process assistant's response
@@ -40,9 +43,22 @@ export async function processAssistantResponse(input, messages, client, domTree)
     }
   } catch (error) {
     console.error('Error extracting function call:', error);
+
+    messages.push({
+      role: 'system',
+      content: 'MALFORMED JSON FUNCTION CALL. TRY AGAIN.'
+    });
+    return processAssistantResponse(input, messages, client, domTree);
   }
 
-  if (function_call) {
+  if(!function_call) {
+    messages.push({
+      role: 'system',
+      content: 'A function call was expected but not found. Try again.'
+    });
+    return processAssistantResponse(input, messages, client, domTree);
+  }
+  else{
     const { name, arguments: args } = function_call;
     let argsObj = {};
     try {
@@ -54,7 +70,17 @@ export async function processAssistantResponse(input, messages, client, domTree)
 
     // If the assistant called 'complete_task', end the flow
     if (name === 'complete_task') {
-      return { domTree };
+      let { finalReflection, success } = await doFinalReflection(input, messages);
+      if(success) {
+        return { domTree, finalReflection, success };
+      }
+      
+      // If the task is not complete, inject failure message
+      messages.push({
+        role: 'system',
+        content: generateInjectedFinalReflectionPrompt({ finalReflection })
+      });
+      return processAssistantResponse(input, messages, client, domTree);
     }
 
     // Execute the function
@@ -64,10 +90,11 @@ export async function processAssistantResponse(input, messages, client, domTree)
     const { domTree: newDomTree, currentURL } = await extractDOM(client);
     domTree = newDomTree;
 
-    if(messages.length > 2) {
-      let potentialSystemPrompt = messages[messages.length - 2].content;
-      if(potentialSystemPrompt.includes('The current DOM tree is:')) {
-        messages.splice(messages.length - 2, 1);
+    // Remove the last system prompt if it has the DOM tree
+    for(let i in  messages) {
+      let potentialSystemPrompt = messages[i]
+      if(potentialSystemPrompt.content.indexOf('The current URL is:') === 0) {
+        messages.splice(i, 1);
       }
     }
 
@@ -75,14 +102,18 @@ export async function processAssistantResponse(input, messages, client, domTree)
 
     messages.push({
       role: 'system',
-      content: generateUpdatePrompt({ reflection, currentURL, domTree })
+      content: generateInjectedReflectionPrompt({ reflection })
+    });
+
+    messages.push({
+      role: 'system',
+      content: generateUpdatePrompt({ currentURL, domTree })
     });
 
     logMessages(messages);
 
     return processAssistantResponse(input, messages, client, domTree);
   }
-  return { domTree };
 }
 
 const doReflection = async (input, messages) => {
@@ -102,3 +133,28 @@ const doReflection = async (input, messages) => {
 
   return response.choices[0].message.content
 }
+
+const doFinalReflection = async (input, messages) => {
+  let prompt = generateFinalReflectionPrompt({ input, messages });
+
+  const response = await openaiClient.chat.completions.create({
+    model: openaiConfig.model,
+    messages: [
+      { role: 'system', content: prompt },
+    ],
+    temperature: openaiConfig.temperature,
+    frequency_penalty: openaiConfig.frequency_penalty,
+  });
+  
+  console.log(`Final Reflection Prompt tokens: ${response.usage.prompt_tokens}`)
+  console.log('FINAL REFLECTION RESPONSE\n' + response.choices[0].message.content)
+
+  const successPattern = /\(Task Completion Verification\)\s*(SUCCESS|FAILURE)/;
+  const match = response.choices[0].message.content.match(successPattern);
+  console.log('match', match);
+  const success = match && match[1] === 'SUCCESS';
+
+  return { finalReflection: response.choices[0].message.content, success };
+}
+
+

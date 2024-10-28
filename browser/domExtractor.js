@@ -3,17 +3,70 @@ import fs from 'fs';
 
 // Function to get the entire DOM tree and start processing
 export async function extractDOM(client) {
-  const { DOMSnapshot, Runtime, Accessibility } = client;
+  const { Runtime, Accessibility, DOM } = client;
 
   // Wait for the DOM to be stable
   await waitForDOMStable(client);
 
+  // Get the AX tree
   const { nodes } = await Accessibility.getFullAXTree();
 
   // DEBUG: A11Y TREE TESTING
   const nodesJson = JSON.stringify(nodes, null, 2);
   fs.writeFileSync('./debug/nodes.json', nodesJson);
-  console.log('Accessibility tree nodes have been written to nodes.json');
+ 
+  // Build a map from backendDOMNodeId to AX node for quick lookup
+  const axNodeMap = new Map();
+  for (const node of nodes) {
+    if (node.backendDOMNodeId) {
+      axNodeMap.set(node.backendDOMNodeId, node);
+    }
+  }
+
+  // Get all DOM nodes with their attributes
+  const { nodes: domNodes } = await DOM.getFlattenedDocument({ depth: -1, pierce: true });
+
+  // Build a map from backendNodeId to DOM node attributes
+  const domNodeAttributesMap = new Map();
+  for (const domNode of domNodes) {
+    if (domNode.backendNodeId && domNode.attributes) {
+      const attributes = {};
+      for (let i = 0; i < domNode.attributes.length; i += 2) {
+        const name = domNode.attributes[i];
+        const value = domNode.attributes[i + 1];
+        attributes[name] = value;
+      }
+      domNodeAttributesMap.set(domNode.backendNodeId, attributes);
+    }
+  }
+
+  // Augment AX nodes with ARIA attributes from DOM nodes
+  for (const [backendNodeId, axNode] of axNodeMap.entries()) {
+    const domAttributes = domNodeAttributesMap.get(backendNodeId);
+    if (domAttributes) {
+      // Extract ARIA attributes
+      const ariaAttributes = {};
+      for (const [key, value] of Object.entries(domAttributes)) {
+        if (key.startsWith('aria-')) {
+          ariaAttributes[key] = value;
+        }
+      }
+      if (Object.keys(ariaAttributes).length > 0) {
+        axNode.ariaAttributes = ariaAttributes;
+        for(let k in ariaAttributes) {
+          let suffix = k.replace('aria-', '');
+          if(!axNode.properties) continue
+          if(axNode.properties.find(p => p.name === suffix)) {
+            continue;
+          }
+          axNode.properties.push({
+            name: suffix,
+            value: { type: 'string', value: ariaAttributes[k] }
+          });
+        }
+      }
+    }
+  }
 
   // Build a map from nodeId to node for quick lookup
   const nodeMap = new Map();
@@ -24,7 +77,9 @@ export async function extractDOM(client) {
   // Link each node with its children
   for (const node of nodes) {
     if (node.childIds) {
-      node.children = node.childIds.map(childId => nodeMap.get(childId)).filter(Boolean);
+      node.children = node.childIds
+        .map(childId => nodeMap.get(childId))
+        .filter(Boolean);
     } else {
       node.children = [];
     }
@@ -33,7 +88,9 @@ export async function extractDOM(client) {
   // Find root nodes (nodes without a parentId)
   const rootNodes = nodes.filter(node => !node.parentId);
 
-  const axTreeString = rootNodes.map(node => buildAXTreeString(node)).join('');
+  const axTreeString = rootNodes
+    .map(node => buildAXTreeString(node))
+    .join('');
   fs.writeFileSync('./debug/a11y.txt', axTreeString);
 
   // Get the current URL
@@ -54,10 +111,13 @@ function buildAXTreeString(node, depth = 0) {
   let focusable = false;
 
   if(role === 'image') {
-    return;
+    return '';
   }
 
-  if (node.ignored || !backendNodeId) {
+  let isEmpty = (!node.properties || node.properties.length === 0) &&
+    !name;
+
+  if (node.ignored || !backendNodeId || isEmpty) {
     // Skip this node but include its children at the same depth
     let treeString = '';
     if (node.children && node.children.length > 0) {

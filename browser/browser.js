@@ -40,11 +40,12 @@ export async function launchBrowser(url) {
     const client = await CDP({ port: chrome.port });
 
     // Destructure necessary domains from the client
-    const { Network, Page, Runtime, Target } = client;
+    const { Network, Page, Runtime, Target, DOM } = client;
 
     // Enable necessary domains
     await Network.enable();
     await Page.enable();
+    await DOM.enable()
 
     // **Enable the Target domain to monitor target events**
     await Target.setDiscoverTargets({ discover: true });

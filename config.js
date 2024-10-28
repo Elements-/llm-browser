@@ -102,6 +102,7 @@ export const generateUpdatePrompt = ({ currentURL, domTree }) => {
 export const generateReflectionPrompt = ({ input, messages }) => {
   return `You are a reflection agent designed to assist in task execution by analyzing a trajectory of task execution until this time step and providing feedback for the next step prediction. You have access to the Task Description and Current Trajectory.
 
+- In cases where actions can be validated, observe if the action was succesful, for example sorting a table or opening a menu.
 - You should only provide informative reflection feedback when you find the trajectory is abnormal (e.g., contain consecutive repeated failed actions). If the trajectory is normal, respond concisely with "Trajectory is normal".
 - You should only provide feedback on the latest action in the trajectory.
 - Make sure to avoid providing any information about specific planning or actions.

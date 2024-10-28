@@ -14,6 +14,7 @@ import {
 // Function to process assistant's response
 export async function processAssistantResponse(input, messages, client, domTree) {
   console.log('\n' + ('='.repeat(20)) + '\n')
+  logMessages(messages);
 
   const response = await openaiClient.chat.completions.create({
     model: openaiConfig.model,
@@ -54,7 +55,7 @@ export async function processAssistantResponse(input, messages, client, domTree)
   if(!function_call) {
     messages.push({
       role: 'system',
-      content: 'A function call was expected but not found. Try again.'
+      content: 'A function call was expected but not found. Try again. Every response must follow the format from the system prompt including all sections.'
     });
     return processAssistantResponse(input, messages, client, domTree);
   }
@@ -65,6 +66,7 @@ export async function processAssistantResponse(input, messages, client, domTree)
       argsObj = JSON.parse(args);
     } catch (err) {
       console.error('Error parsing function arguments:', err);
+      logMessages(messages);
       return { domTree };
     }
 
@@ -72,6 +74,7 @@ export async function processAssistantResponse(input, messages, client, domTree)
     if (name === 'complete_task') {
       let { finalReflection, success } = await doFinalReflection(input, messages);
       if(success) {
+        logMessages(messages);
         return { domTree, finalReflection, success };
       }
       
@@ -110,8 +113,7 @@ export async function processAssistantResponse(input, messages, client, domTree)
       content: generateUpdatePrompt({ currentURL, domTree })
     });
 
-    logMessages(messages);
-
+    
     return processAssistantResponse(input, messages, client, domTree);
   }
 }
@@ -151,7 +153,6 @@ const doFinalReflection = async (input, messages) => {
 
   const successPattern = /\(Task Completion Verification\)\s*(SUCCESS|FAILURE)/;
   const match = response.choices[0].message.content.match(successPattern);
-  console.log('match', match);
   const success = match && match[1] === 'SUCCESS';
 
   return { finalReflection: response.choices[0].message.content, success };
